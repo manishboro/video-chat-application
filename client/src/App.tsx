@@ -1,33 +1,24 @@
-import { Typography, AppBar } from "@material-ui/core";
-import { makeStyles } from "@material-ui/core/styles";
+import { makeStyles } from "@mui/styles";
 
-import VideoPlayer from "./components/VideoPlayer";
-import Sidebar from "./components/Sidebar";
-import Notifications from "./components/Notifications";
+import VideoPlayer from "./components/video-player";
+import Sidebar from "./components/sidebar";
+import Notifications from "./components/notifications";
+import Footer from "./components/footer";
 
 const useStyles = makeStyles((theme) => ({
-  appBar: {
-    borderRadius: 15,
-    margin: "30px 100px",
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    width: "600px",
-    border: "2px solid black",
+  root: {
+    width: "100%",
+    minHeight: "100%",
+    backgroundColor: "#484848",
+    position: "relative",
+    top: 0,
+    left: 0,
+  },
 
-    [theme.breakpoints.down("xs")]: {
-      width: "90%",
-    },
-  },
-  image: {
-    marginLeft: "15px",
-  },
   wrapper: {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    width: "100%",
   },
 }));
 
@@ -35,18 +26,15 @@ const App = () => {
   const classes = useStyles();
 
   return (
-    <div className={classes.wrapper}>
-      <AppBar className={classes.appBar} position="static" color="inherit">
-        <Typography variant="h2" align="center">
-          Video Chat
-        </Typography>
-      </AppBar>
+    <div className={classes.root}>
+      <div className={classes.wrapper}>
+        <VideoPlayer />
 
-      <VideoPlayer />
-
-      <Sidebar>
-        <Notifications />
-      </Sidebar>
+        {/* <Sidebar>
+          <Notifications />
+        </Sidebar> */}
+        <Footer />
+      </div>
     </div>
   );
 };
