@@ -6,9 +6,15 @@
   box-sizing: inherit;
 }
 
+@font-face {
+  font-family: Montserrat;
+  src: url("./static/fonts/Montserrat-Regular.ttf");
+}
+
 html {
   font-size: 62.5%;
 }
+
 @media only screen and (max-width: 75em) {
   html {
     font-size: 56.25%;

@@ -1,9 +1,9 @@
 import { makeStyles } from "@mui/styles";
 import Typography from "@mui/material/Typography";
 
-import { useSocketContext } from "../../context/SocketContext";
+import { useSocketContext } from "../../../context/SocketContext";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles({
   videoContainer: {
     width: "100%",
     height: "calc(100vh - 10rem)",
@@ -24,7 +24,7 @@ const useStyles = makeStyles((theme) => ({
     left: "1rem",
     zIndex: 10,
   },
-}));
+});
 
 const VideoPlayer = () => {
   const classes = useStyles();
@@ -35,19 +35,19 @@ const VideoPlayer = () => {
       <div className={classes.videoContainer}>
         {ctx.ctxData.stream && (
           <>
-            <Typography variant="h5" gutterBottom className={classes.name}>
+            {/* <Typography variant="h5" gutterBottom className={classes.name}>
               {ctx.ctxData.name || "Name"}
-            </Typography>
+            </Typography> */}
             <video playsInline muted ref={ctx.myVideo} autoPlay className={classes.video}></video>
           </>
         )}
 
         {ctx.ctxData.callAccepted && !ctx.ctxData.callEnded && (
           <>
-            <Typography variant="h5" gutterBottom>
-              {ctx.ctxData.call.name || "Name"}
-            </Typography>
-            <video playsInline ref={ctx.userVideo} autoPlay className={classes.video} />
+            {/* <Typography variant="h5" gutterBottom>
+              {ctx.ctxData.call?.name || "Name"}
+            </Typography> */}
+            <video playsInline ref={ctx.myVideo} autoPlay className={classes.video} />
           </>
         )}
       </div>

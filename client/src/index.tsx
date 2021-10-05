@@ -3,13 +3,16 @@ import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import { ContextProvider } from "./context/SocketContext";
+import SocketContextProvider from "./context/SocketContext";
+import AlertContextProvider from "./context/AlertContext";
 
 ReactDOM.render(
   <React.StrictMode>
-    <ContextProvider>
-      <App />
-    </ContextProvider>
+    <AlertContextProvider>
+      <SocketContextProvider>
+        <App />
+      </SocketContextProvider>
+    </AlertContextProvider>
   </React.StrictMode>,
   document.getElementById("root")
 );
