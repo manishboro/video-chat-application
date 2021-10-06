@@ -2,8 +2,8 @@ import { makeStyles } from "@mui/styles";
 
 export const useStyles = makeStyles({
   root: {
-    borderRadius: "3rem !important",
-    fontSize: "1.8rem",
+    borderRadius: "3rem",
+    fontSize: "1.7rem",
     fontFamily: "Montserrat",
     position: "relative",
     width: "max-content",
@@ -16,7 +16,7 @@ export const useStyles = makeStyles({
 
   button: {
     minWidth: "16rem",
-    height: "4.6rem",
+    height: "4.4rem",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-around",

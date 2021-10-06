@@ -1,21 +1,14 @@
 import { makeStyles } from "@mui/styles";
-import Footer from "../../components/video/footer";
-import VideoPlayer from "../../components/video/video-player";
+
+import VideoPlayerOverview from "../../components/video/video-player";
 
 const useStyles = makeStyles({
   root: {
     width: "100%",
-    minHeight: "100%",
+    minHeight: "100vh",
     backgroundColor: "#484848",
-    position: "relative",
-    top: 0,
-    left: 0,
-  },
-
-  wrapper: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
+    position: "fixed",
+    inset: 0,
   },
 });
 
@@ -24,10 +17,7 @@ const VideoPage = () => {
 
   return (
     <div className={classes.root}>
-      <div className={classes.wrapper}>
-        <VideoPlayer />
-        <Footer />
-      </div>
+      <VideoPlayerOverview />
     </div>
   );
 };

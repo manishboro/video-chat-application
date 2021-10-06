@@ -3,10 +3,10 @@ import MicIcon from "@mui/icons-material/Mic";
 import MicOffIcon from "@mui/icons-material/MicOff";
 import VideocamIcon from "@mui/icons-material/Videocam";
 import VideocamOffIcon from "@mui/icons-material/VideocamOff";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
 export const FooterRoot = styled("footer")(({ theme }) => ({
   height: "8rem",
-  backgroundColor: "484848",
   width: "100%",
   display: "flex",
   alignItems: "center",
@@ -22,12 +22,24 @@ export const ListContainer = styled("ul")(({ theme }) => ({
   "& li:not(:last-child)": { marginRight: ".5rem" },
 }));
 
+let IconStyles = { fontSize: "3rem", color: "white" };
+
 export const StyledMicIcon = styled(MicIcon)(({ theme }) => ({
-  fontSize: "3rem",
-  color: "white",
+  ...IconStyles,
+}));
+
+export const StyledMicOffIcon = styled(MicOffIcon)(({ theme }) => ({
+  ...IconStyles,
 }));
 
 export const StyledVideocamIcon = styled(VideocamIcon)(({ theme }) => ({
-  fontSize: "3rem",
-  color: "white",
+  ...IconStyles,
+}));
+
+export const StyledVideocamOffIcon = styled(VideocamOffIcon)(({ theme }) => ({
+  ...IconStyles,
+}));
+
+export const StyledContentCopyIcon = styled(ContentCopyIcon)(({ theme }) => ({
+  ...IconStyles,
 }));

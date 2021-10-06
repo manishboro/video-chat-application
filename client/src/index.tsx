@@ -1,18 +1,27 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import "./index.css";
-import App from "./App";
-import reportWebVitals from "./reportWebVitals";
+import "./styles/index.css";
+
+import { ThemeProvider } from "@mui/material/styles";
+import { CssBaseline } from "@mui/material";
+
 import SocketContextProvider from "./context/SocketContext";
 import AlertContextProvider from "./context/AlertContext";
+import App from "./App";
+import theme from "./styles/theme";
+
+import reportWebVitals from "./reportWebVitals";
 
 ReactDOM.render(
   <React.StrictMode>
-    <AlertContextProvider>
-      <SocketContextProvider>
-        <App />
-      </SocketContextProvider>
-    </AlertContextProvider>
+    <ThemeProvider theme={theme}>
+      <AlertContextProvider>
+        <SocketContextProvider>
+          <CssBaseline />
+          <App />
+        </SocketContextProvider>
+      </AlertContextProvider>
+    </ThemeProvider>
   </React.StrictMode>,
   document.getElementById("root")
 );

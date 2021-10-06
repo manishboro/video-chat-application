@@ -1,13 +1,22 @@
 import { makeStyles } from "@mui/styles";
-import Typography from "@mui/material/Typography";
 
 import { useSocketContext } from "../../../context/SocketContext";
+import Footer from "../footer";
 
 const useStyles = makeStyles({
+  videoContainerRoot: {
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
   videoContainer: {
     width: "100%",
-    height: "calc(100vh - 10rem)",
-    margin: "1rem",
+    height: "calc(100vh - 15rem)",
+    margin: "auto",
     position: "relative",
   },
 
@@ -26,33 +35,31 @@ const useStyles = makeStyles({
   },
 });
 
-const VideoPlayer = () => {
+type VideoRef = React.LegacyRef<HTMLVideoElement> | undefined;
+
+export const VideoPlayer = ({ videoRef }: { videoRef: VideoRef }) => {
+  const classes = useStyles();
+
+  return <video playsInline muted ref={videoRef} autoPlay className={classes.video} />;
+};
+
+const VideoPlayerOverview = () => {
   const classes = useStyles();
   const ctx = useSocketContext();
 
   return (
     ctx && (
-      <div className={classes.videoContainer}>
-        {ctx.ctxData.stream && (
-          <>
-            {/* <Typography variant="h5" gutterBottom className={classes.name}>
-              {ctx.ctxData.name || "Name"}
-            </Typography> */}
-            <video playsInline muted ref={ctx.myVideo} autoPlay className={classes.video}></video>
-          </>
-        )}
-
-        {ctx.ctxData.callAccepted && !ctx.ctxData.callEnded && (
-          <>
-            {/* <Typography variant="h5" gutterBottom>
-              {ctx.ctxData.call?.name || "Name"}
-            </Typography> */}
-            <video playsInline ref={ctx.myVideo} autoPlay className={classes.video} />
-          </>
-        )}
+      <div className={classes.videoContainerRoot}>
+        <div className={classes.videoContainer} ref={ctx.videoPlayer}>
+          {/* Our own video */}
+          {ctx.ctxData.stream && <VideoPlayer videoRef={ctx.myVideo} />}
+          {/* Other user's video */}
+          {ctx.ctxData.callAccepted && !ctx.ctxData.callEnded && <VideoPlayer videoRef={ctx.myVideo} />}
+        </div>
+        <Footer />
       </div>
     )
   );
 };
 
-export default VideoPlayer;
+export default VideoPlayerOverview;

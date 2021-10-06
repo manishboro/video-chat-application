@@ -12,20 +12,14 @@ const io = new Server(httpServer, {
 
 app.use(cors(), express.json());
 
-app.get("/", (req: Request, res: Response) =>
-  res.send("<h1>API server is running!!</h1>")
-);
+app.get("/", (req: Request, res: Response) => res.send("<h1>API server is running!!</h1>"));
 
 io.on("connection", (socket: Socket) => {
   socket.emit("me", socket.id);
 
   socket.on("disconnect", () => socket.broadcast.emit("callended"));
 
-  socket.on("calluser", ({ userToCall, signalData, from, name }) =>
-    io.to(userToCall).emit("calluser", { signal: signalData, from, name })
-  );
+  socket.on("calluser", ({ userToCall, signalData, from, name }) => io.to(userToCall).emit("calluser", { signal: signalData, from, name }));
 
-  socket.on("answercall", (data) =>
-    io.to(data.to).emit("callaccepted", data.signal)
-  );
+  socket.on("answercall", (data) => io.to(data.to).emit("callaccepted", data.signal));
 });

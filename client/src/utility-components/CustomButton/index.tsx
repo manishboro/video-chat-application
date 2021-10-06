@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import clsx from "clsx";
 
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
@@ -9,7 +8,6 @@ import { useStyles } from "./styles";
 interface CustomButtonProps {
   text: string;
   href?: string;
-  className?: string;
   variant?: "text" | "outlined" | "contained" | undefined;
   color?: "inherit" | "primary" | "secondary" | "success" | "error" | "info" | "warning" | undefined;
   type?: "submit" | "button" | undefined;
@@ -17,7 +15,8 @@ interface CustomButtonProps {
   loading?: boolean;
   Icon?: any;
   enableIcon?: boolean;
-  style?: React.CSSProperties;
+  rootStyles?: React.CSSProperties;
+  buttonStyles?: React.CSSProperties;
   fn?: any;
 }
 
@@ -35,7 +34,6 @@ const GetIcon = ({ Icon }: { Icon: any }) => {
 const CustomButton: React.FC<CustomButtonProps> = ({
   text,
   href,
-  className,
   variant = "contained",
   color = "primary",
   type = "button",
@@ -44,7 +42,8 @@ const CustomButton: React.FC<CustomButtonProps> = ({
   IconDirection = "right",
   loading = false,
   fn = () => null,
-  style,
+  rootStyles,
+  buttonStyles,
 }) => {
   const classes = useStyles();
 
@@ -53,16 +52,16 @@ const CustomButton: React.FC<CustomButtonProps> = ({
       variant={variant}
       color={color}
       type={type}
-      className={clsx(classes.root, className)}
+      className={classes.root}
       // classes={{ label: classes.label }}
       onClick={() => (fn ? fn() : null)}
       disabled={loading}
-      style={{ ...style }}
+      style={{ ...rootStyles }}
     >
       {!loading ? (
         href ? (
           <Link to={href}>
-            <div className={classes.button}>
+            <div className={classes.button} style={{ ...buttonStyles }}>
               {IconDirection === "right" && (
                 <div style={{ display: "flex", alignItems: "center" }}>
                   {text}{" "}
@@ -80,12 +79,12 @@ const CustomButton: React.FC<CustomButtonProps> = ({
             </div>
           </Link>
         ) : (
-          <div className={classes.button}>
+          <div className={classes.button} style={{ ...buttonStyles }}>
             {text} {Icon && enableIcon ? <GetIcon Icon={Icon} /> : <NavigateNextIcon className={classes.icon} />}
           </div>
         )
       ) : (
-        <div className={classes.button}>
+        <div className={classes.button} style={{ ...buttonStyles }}>
           <CircularProgress color="secondary" style={{ height: "30px", width: "30px", margin: "auto" }} />
         </div>
       )}

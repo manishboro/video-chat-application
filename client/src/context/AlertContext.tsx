@@ -10,7 +10,7 @@ interface SnackbarMessage {
 
 interface AlertContextInterface {
   handleSnackbar(message: string): void;
-  handleAlertProps(key: string, value: string): void;
+  handleAlertProps(key: string, value: string | boolean): void;
 }
 
 interface AlertDataInterface {
@@ -28,19 +28,19 @@ const AlertContextProvider: React.FC = ({ children }) => {
   const [open, setOpen] = React.useState(true);
 
   const [alertProps, setAlertProps] = React.useState<AlertDataInterface>({
-    variant: "standard",
+    variant: "filled",
     severity: undefined,
-    showAlert: true,
+    showAlert: false,
   });
+
+  const handleAlertProps = (key: string, value: boolean | string) => setAlertProps((prev) => ({ ...prev, [key]: value }));
 
   const handleSnackbar = (message: string) => setSnackPack((prev) => [...prev, { message, key: new Date().getTime() }]);
 
   const handleClose = (event: React.SyntheticEvent | MouseEvent, reason?: string) => {
     if (reason === "clickaway") return;
-    setOpen(false);
+    handleAlertProps("showAlert", false);
   };
-
-  const handleAlertProps = (key: string, value: string) => setAlertProps((prev) => ({ ...prev, [key]: value }));
 
   React.useEffect(() => {
     if (snackPack.length && !messageInfo) {
@@ -52,6 +52,8 @@ const AlertContextProvider: React.FC = ({ children }) => {
       // Close an active snack when a new one is added
       setOpen(false);
     }
+
+    // eslint-disable-next-line
   }, [snackPack, messageInfo, open]);
 
   const handleExited = () => setMessageInfo(undefined);
@@ -61,9 +63,11 @@ const AlertContextProvider: React.FC = ({ children }) => {
       <Snackbar
         key={messageInfo ? messageInfo.key : undefined}
         open={alertProps.showAlert}
-        // autoHideDuration={5000}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        autoHideDuration={5000}
         TransitionProps={{ onExited: handleExited }}
         message={messageInfo ? messageInfo.message : undefined}
+        onClose={handleClose}
       >
         <Alert onClose={handleClose} variant={alertProps.variant} severity={alertProps.severity} sx={{ width: "100%", fontSize: "1.7rem" }}>
           {messageInfo?.message}
