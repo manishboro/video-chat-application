@@ -41,9 +41,13 @@ const ButtonsContainer = styled("div")(({ theme }) => ({
 const useStyles = makeStyles({
   root: {
     minHeight: "100vh",
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    placeItems: "center",
+    position: "absolute",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    // display: "grid",
+    // gridTemplateColumns: "1fr 1fr",
+    // placeItems: "center",
   },
 });
 
@@ -67,7 +71,7 @@ export default function HomePage() {
     <div className={classes.root}>
       {ctx && <VideoHome data={ctx} />}
 
-      <StyledRightContainer>
+      {/* <StyledRightContainer>
         {step === 1 && (
           <ButtonsContainer>
             <CustomButton text="New Meeting" fn={handleStepChange(2)} />
@@ -143,7 +147,7 @@ export default function HomePage() {
             />
           </StyledForm>
         )}
-      </StyledRightContainer>
+      </StyledRightContainer> */}
     </div>
   );
 }

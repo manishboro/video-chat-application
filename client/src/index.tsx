@@ -11,14 +11,17 @@ import App from "./App";
 import theme from "./styles/theme";
 
 import reportWebVitals from "./reportWebVitals";
+import ModalContextProvider from "./context/ModalContext";
 
 ReactDOM.render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <AlertContextProvider>
         <SocketContextProvider>
-          <CssBaseline />
-          <App />
+          <ModalContextProvider>
+            <CssBaseline />
+            <App />
+          </ModalContextProvider>
         </SocketContextProvider>
       </AlertContextProvider>
     </ThemeProvider>

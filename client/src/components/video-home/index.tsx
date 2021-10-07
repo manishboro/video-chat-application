@@ -51,6 +51,7 @@ const VideoHome: React.FC<{ data: AppContextInterface }> = ({ data }) => {
   return (
     <div className={classes.root}>
       <VideoPlayer videoRef={myVideo} />
+
       <ul className={classes.listsContainer}>
         <li>
           <IconButton className={classes.iconButton}>
