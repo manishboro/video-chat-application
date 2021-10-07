@@ -7,7 +7,7 @@ import { styled } from "@mui/material/styles";
 import CustomTextField from "../../utility-components/CustomTextField";
 import CustomButton from "../../utility-components/CustomButton";
 import BackButton from "../../utility-components/BackButton";
-import { VideoPlayer } from "../../components/video/video-player";
+import VideoHome from "../../components/video-home";
 import { useSocketContext } from "../../context/SocketContext";
 import { setItemToStorage } from "../../utils/localStorage";
 
@@ -45,12 +45,6 @@ const useStyles = makeStyles({
     gridTemplateColumns: "1fr 1fr",
     placeItems: "center",
   },
-
-  videoContainerRoot: {
-    width: "60rem",
-    height: "40rem",
-    position: "relative",
-  },
 });
 
 export default function HomePage() {
@@ -65,19 +59,13 @@ export default function HomePage() {
 
   const handleJoinMeeting = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(idToCall);
+    history.push("/user-video");
     ctx?.callUser(idToCall);
   };
 
   return (
     <div className={classes.root}>
-      <div>
-        {ctx && (
-          <div className={classes.videoContainerRoot} ref={ctx.videoPlayer}>
-            <VideoPlayer videoRef={ctx.myVideo} />
-          </div>
-        )}
-      </div>
+      {ctx && <VideoHome data={ctx} />}
 
       <StyledRightContainer>
         {step === 1 && (
@@ -90,7 +78,7 @@ export default function HomePage() {
         {step === 2 && (
           <StyledForm
             onSubmit={() => {
-              history.push("/video");
+              history.push("/admin-video");
               window.location.reload();
             }}
           >

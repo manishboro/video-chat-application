@@ -5,7 +5,7 @@ import { io } from "socket.io-client";
 import { getItemFromStorage } from "../utils/localStorage";
 import { useAlertContext } from "./AlertContext";
 
-interface AppContextInterface {
+export interface AppContextInterface {
   ctxData: CtxDataInterface;
   videoPlayer: any;
   userVideo: any;
@@ -16,7 +16,7 @@ interface AppContextInterface {
   leaveCall(): void;
 }
 
-interface CtxDataInterface {
+export interface CtxDataInterface {
   callAccepted: boolean;
   callEnded: boolean;
   stream: MediaStream | undefined;
@@ -65,11 +65,15 @@ const SocketContextProvider: React.FC = ({ children }) => {
 
       try {
         // Returns us an ID as soon as the connection is established
-        socket.on("me", (id) => setCtxData((prev) => ({ ...prev, me: id })));
+        socket.on("me", (id) => {
+          console.log("me", id);
+          setCtxData((prev) => ({ ...prev, me: id }));
+        });
 
-        socket.on("callUser", ({ from, displayName: callerName, signal }) =>
-          handleSetData("call", { isReceivingCall: true, from, displayName: callerName, signal })
-        );
+        socket.on("callUser", ({ from, displayName: callerName, signal }) => {
+          console.log(from, callerName, signal);
+          handleSetData("call", { isReceivingCall: true, from, displayName: callerName, signal });
+        });
 
         if (getItemFromStorage("displayName")) handleSetData("displayName", getItemFromStorage("displayName") ?? "");
 
@@ -121,7 +125,10 @@ const SocketContextProvider: React.FC = ({ children }) => {
     const peer = new Peer({ initiator: false, trickle: false, stream: ctxData.stream });
 
     peer.on("signal", (data) => socket.emit("answerCall", { signal: data, to: ctxData.call?.from }));
-    peer.on("stream", (currentStream) => (userVideo.current.srcObject = currentStream));
+    peer.on("stream", (currentStream) => {
+      console.log(currentStream);
+      userVideo.current.srcObject = currentStream;
+    });
     peer.signal(ctxData.call?.signal);
 
     connectionRef.current = peer;
@@ -129,6 +136,8 @@ const SocketContextProvider: React.FC = ({ children }) => {
 
   // To call other user
   const callUser = (id: string) => {
+    console.log(id);
+
     const peer = new Peer({
       initiator: true,
       trickle: false,

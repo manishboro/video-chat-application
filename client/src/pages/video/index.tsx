@@ -1,6 +1,6 @@
 import { makeStyles } from "@mui/styles";
 
-import VideoPlayerOverview from "../../components/video/video-player";
+import VideoPlayerOverview from "../../components/video/video-player-overview";
 
 const useStyles = makeStyles({
   root: {

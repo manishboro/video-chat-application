@@ -21,7 +21,11 @@ const App = () => {
             <HomePage />
           </Route>
 
-          <Route path="/video">
+          <Route path="/admin-video">
+            <VideoPage />
+          </Route>
+
+          <Route path="/user-video">
             <VideoPage />
           </Route>
         </Switch>
