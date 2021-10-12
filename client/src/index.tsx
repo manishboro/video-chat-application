@@ -3,7 +3,6 @@ import ReactDOM from "react-dom";
 import "./styles/index.css";
 
 import { ThemeProvider } from "@mui/material/styles";
-import { CssBaseline } from "@mui/material";
 
 import SocketContextProvider from "./context/SocketContext";
 import AlertContextProvider from "./context/AlertContext";
@@ -19,7 +18,6 @@ ReactDOM.render(
       <AlertContextProvider>
         <SocketContextProvider>
           <ModalContextProvider>
-            <CssBaseline />
             <App />
           </ModalContextProvider>
         </SocketContextProvider>

@@ -12,26 +12,23 @@ export const useStyles = makeStyles({
 
 export const ButtonsContainer = styled("div")(({ theme }) => ({
   position: "absolute",
-  top: "2rem",
-  right: "2rem",
+  bottom: "2rem",
+  left: "50%",
+  transform: "translateX(-50%)",
 
   "& > button:not(:last-child)": {
     marginRight: "1rem",
   },
 }));
 
-export const StyledRightContainer = styled("div")(({ theme }) => ({
-  placeSelf: "center",
-  width: "50rem",
-}));
-
 export const StyledForm = styled("form")(({ theme }) => ({
-  padding: "4rem",
-  width: "100%",
+  padding: "35px 25px",
+  width: "600px",
   placeSelf: "center",
-  borderRadius: "3rem",
+  borderRadius: "10px",
   position: "relative",
   boxShadow: theme.shadows[3],
+  backgroundColor: "white",
 
   "& > *:not(:last-child)": {
     marginBottom: "1rem",

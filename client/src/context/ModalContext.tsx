@@ -1,14 +1,14 @@
 import React from "react";
 
-import { IconButton, styled } from "@mui/material";
+import { Backdrop, IconButton, styled } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import Modal from "@mui/material/Modal";
+import Fade from "@mui/material/Fade";
 
-const StyledModalContext = styled("div")(({ theme }) => ({
-  position: "fixed",
-  width: "100vw",
-  height: "100vh",
-  backgroundColor: "rgba(0, 0, 0, .7)",
-  zIndex: 10000,
+const StyledModalContext = styled(Modal)(({ theme }) => ({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
 }));
 
 interface ModalContextInterface {
@@ -23,22 +23,32 @@ export const useModalContext = () => React.useContext(ModalContext);
 
 const ModalContextProvider: React.FC = ({ children }) => {
   const [open, setOpen] = React.useState(false);
-  const [Component, setComponent] = React.useState<React.ReactNode | null>(undefined);
+  const [Component, setComponent] = React.useState<any>(undefined);
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
   return (
     <ModalContext.Provider value={{ handleOpen, handleClose, setComponent }}>
-      {open && (
-        <StyledModalContext>
-          <IconButton style={{ position: "absolute", top: "2rem", right: "2rem", border: "1px solid white" }} onClick={handleClose}>
-            <CloseIcon style={{ color: "white", fontSize: "4rem" }} />
-          </IconButton>
+      <StyledModalContext
+        aria-labelledby="transition-modal-title"
+        aria-describedby="transition-modal-description"
+        open={open}
+        onClose={handleClose}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{ timeout: 500 }}
+      >
+        <Fade in={open}>
+          <div>
+            <IconButton style={{ position: "absolute", top: "2rem", right: "2rem", border: "1px solid white" }} onClick={handleClose}>
+              <CloseIcon style={{ color: "white" }} />
+            </IconButton>
+            {Component}
+          </div>
+        </Fade>
+      </StyledModalContext>
 
-          {Component}
-        </StyledModalContext>
-      )}
       {children}
     </ModalContext.Provider>
   );

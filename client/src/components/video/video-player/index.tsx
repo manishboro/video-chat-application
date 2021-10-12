@@ -2,7 +2,8 @@ import { makeStyles } from "@mui/styles";
 import { styled } from "@mui/material/styles";
 import { IconButton } from "@mui/material";
 
-import { StyledMicIcon, StyledVideocamIcon } from "../footer/styles";
+import { StyledMicIcon, StyledMicOffIcon, StyledVideocamIcon, StyledVideocamOffIcon } from "../../../styles/common";
+import { useSocketContext } from "../../../context/SocketContext";
 
 type VideoRef = React.LegacyRef<HTMLVideoElement> | undefined;
 
@@ -36,12 +37,17 @@ const StyledVideoPlayer = styled("video")(({ theme }) => ({
 
 interface VideoPlayerProps {
   videoRef: VideoRef;
+  audioBool: boolean | undefined;
+  videoBool: boolean | undefined;
+  updateMic?: () => void;
+  updateVideo?: () => void;
   height?: string;
   width?: string;
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoRef, height, width }) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoRef, audioBool, videoBool, height, width, updateMic, updateVideo }) => {
   const classes = useStyles();
+  const ctx = useSocketContext();
 
   return (
     <div className={classes.root}>
@@ -49,14 +55,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoRef, height, width }) =>
 
       <ul className={classes.listsContainer}>
         <li>
-          <IconButton className={classes.iconButton}>
-            <StyledMicIcon />
+          <IconButton className={classes.iconButton} onClick={() => (updateMic ? updateMic() : null)}>
+            {audioBool ? <StyledMicIcon /> : <StyledMicOffIcon />}
           </IconButton>
         </li>
 
         <li>
-          <IconButton className={classes.iconButton}>
-            <StyledVideocamIcon />
+          <IconButton className={classes.iconButton} onClick={() => (updateVideo ? updateVideo() : null)}>
+            {videoBool ? <StyledVideocamIcon /> : <StyledVideocamOffIcon />}
           </IconButton>
         </li>
       </ul>

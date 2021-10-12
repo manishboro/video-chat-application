@@ -20,12 +20,12 @@ interface CustomButtonProps {
   fn?: any;
 }
 
-const GetIcon = ({ Icon }: { Icon: any }) => {
+const GetIcon = ({ Icon, style }: { Icon: any; style?: React.CSSProperties }) => {
   const classes = useStyles();
 
   return (
     <>
-      {Icon && typeof Icon === "object" && <Icon className={classes.icon} />}
+      {Icon && typeof Icon === "object" && <Icon className={classes.icon} style={{ ...style }} />}
       {Icon && typeof Icon === "function" && Icon()}
     </>
   );
@@ -47,13 +47,32 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 }) => {
   const classes = useStyles();
 
+  const ButtonContent = () => (
+    <div className={classes.button} style={{ ...buttonStyles }}>
+      {IconDirection === "right" && (
+        <div style={{ display: "flex", alignItems: "center" }}>
+          {text}{" "}
+          <span style={{ display: "flex", alignItems: "center" }}>
+            {Icon && enableIcon ? <GetIcon Icon={Icon} /> : <NavigateNextIcon className={classes.icon} />}
+          </span>
+        </div>
+      )}
+
+      {IconDirection === "left" && (
+        <div style={{ display: "flex", alignItems: "center" }}>
+          {Icon && enableIcon ? <GetIcon Icon={Icon} style={{ margin: "0 1rem 0 0" }} /> : <NavigateNextIcon className={classes.icon} />}{" "}
+          {text}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <Button
       variant={variant}
       color={color}
       type={type}
       className={classes.root}
-      // classes={{ label: classes.label }}
       onClick={() => (fn ? fn() : null)}
       disabled={loading}
       style={{ ...rootStyles }}
@@ -61,27 +80,10 @@ const CustomButton: React.FC<CustomButtonProps> = ({
       {!loading ? (
         href ? (
           <Link to={href}>
-            <div className={classes.button} style={{ ...buttonStyles }}>
-              {IconDirection === "right" && (
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  {text}{" "}
-                  <span style={{ display: "flex", alignItems: "center" }}>
-                    {Icon && enableIcon ? <GetIcon Icon={Icon} /> : <NavigateNextIcon className={classes.icon} />}
-                  </span>
-                </div>
-              )}
-
-              {IconDirection === "left" && (
-                <div>
-                  {Icon && enableIcon ? <GetIcon Icon={Icon} /> : <NavigateNextIcon className={classes.icon} />} {text}
-                </div>
-              )}
-            </div>
+            <ButtonContent />
           </Link>
         ) : (
-          <div className={classes.button} style={{ ...buttonStyles }}>
-            {text} {Icon && enableIcon ? <GetIcon Icon={Icon} /> : <NavigateNextIcon className={classes.icon} />}
-          </div>
+          <ButtonContent />
         )
       ) : (
         <div className={classes.button} style={{ ...buttonStyles }}>

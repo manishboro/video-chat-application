@@ -11,7 +11,7 @@
   src: url("../static/fonts/Montserrat-Regular.ttf");
 }
 
-html {
+/* html {
   font-size: 62.5%;
 }
 
@@ -31,7 +31,7 @@ html {
   html {
     font-size: 75%;
   }
-}
+} */
 
 body {
   box-sizing: border-box;

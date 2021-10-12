@@ -3,7 +3,7 @@ import { makeStyles } from "@mui/styles";
 export const useStyles = makeStyles({
   root: {
     borderRadius: "3rem",
-    fontSize: "1.7rem",
+    fontSize: "16px",
     fontFamily: "Montserrat",
     position: "relative",
     width: "max-content",
@@ -15,13 +15,15 @@ export const useStyles = makeStyles({
   },
 
   button: {
-    minWidth: "16rem",
-    height: "4.4rem",
+    height: "45px",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-around",
     padding: "0 1.5rem",
   },
 
-  icon: { fontSize: "2.4rem", marginLeft: "1.25rem" },
+  icon: {
+    fontSize: "25px",
+    marginLeft: "1rem",
+  },
 });

@@ -10,6 +10,8 @@ export interface AppContextInterface {
   videoPlayer: any;
   userVideo: any;
   myVideo: any;
+  updateMic(): void;
+  updateVideo(): void;
   handleSetData(key: string, value: SetDataValue): void;
   answerCall(): void;
   callUser(id: string): void;
@@ -23,6 +25,8 @@ export interface CtxDataInterface {
   call: CtxDataCall;
   video: boolean;
   audio: boolean;
+  userVideo: boolean | undefined;
+  userAudio: boolean | undefined;
   displayName: string;
   me: string;
 }
@@ -46,6 +50,8 @@ const SocketContextProvider: React.FC = ({ children }) => {
     call: undefined,
     video: true,
     audio: true,
+    userAudio: true,
+    userVideo: true,
     displayName: "",
     me: "",
   });
@@ -63,18 +69,31 @@ const SocketContextProvider: React.FC = ({ children }) => {
     const getMedia = async () => {
       if (!videoPlayer.current) return; // Check whether video player is rendered or not
 
+      // Returns us an ID as soon as the connection is established
+      socket.on("me", (id) => handleSetData("me", id));
+
+      socket.on("callUser", ({ from, displayName, signal }) => handleSetData("call", { isReceivingCall: true, from, displayName, signal }));
+
+      socket.on("updateUserMedia", ({ type, currentMediaStatus }) => {
+        if (currentMediaStatus !== null || currentMediaStatus !== []) {
+          switch (type) {
+            case "video":
+              handleSetData("userVideo", currentMediaStatus);
+              break;
+
+            case "mic":
+              handleSetData("userAudio", currentMediaStatus);
+              break;
+
+            default:
+              handleSetData("userVideo", undefined);
+              handleSetData("userAudio", undefined);
+              break;
+          }
+        }
+      });
+
       try {
-        // Returns us an ID as soon as the connection is established
-        socket.on("me", (id) => {
-          console.log("me", id);
-          setCtxData((prev) => ({ ...prev, me: id }));
-        });
-
-        socket.on("callUser", ({ from, displayName: callerName, signal }) => {
-          console.log(from, callerName, signal);
-          handleSetData("call", { isReceivingCall: true, from, displayName: callerName, signal });
-        });
-
         if (getItemFromStorage("displayName")) handleSetData("displayName", getItemFromStorage("displayName") ?? "");
 
         stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -125,10 +144,7 @@ const SocketContextProvider: React.FC = ({ children }) => {
     const peer = new Peer({ initiator: false, trickle: false, stream: ctxData.stream });
 
     peer.on("signal", (data) => socket.emit("answerCall", { signal: data, to: ctxData.call?.from }));
-    peer.on("stream", (currentStream) => {
-      console.log(currentStream);
-      userVideo.current.srcObject = currentStream;
-    });
+    peer.on("stream", (currentStream) => (userVideo.current.srcObject = currentStream));
     peer.signal(ctxData.call?.signal);
 
     connectionRef.current = peer;
@@ -136,8 +152,6 @@ const SocketContextProvider: React.FC = ({ children }) => {
 
   // To call other user
   const callUser = (id: string) => {
-    console.log(id);
-
     const peer = new Peer({
       initiator: true,
       trickle: false,
@@ -170,7 +184,18 @@ const SocketContextProvider: React.FC = ({ children }) => {
     window.location.reload();
   };
 
-  const appContext: AppContextInterface = { ctxData, videoPlayer, userVideo, myVideo, handleSetData, answerCall, callUser, leaveCall };
+  const appContext: AppContextInterface = {
+    ctxData,
+    videoPlayer,
+    userVideo,
+    myVideo,
+    updateMic,
+    updateVideo,
+    handleSetData,
+    answerCall,
+    callUser,
+    leaveCall,
+  };
   return <AppCtx.Provider value={appContext}>{children}</AppCtx.Provider>;
 };
 

@@ -19,7 +19,15 @@ io.on("connection", (socket: Socket) => {
 
   socket.on("disconnect", () => socket.broadcast.emit("callEnded"));
 
-  socket.on("callUser", ({ userToCall, signalData, from, name }) => io.to(userToCall).emit("callUser", { signal: signalData, from, name }));
+  socket.on("updateMyMedia", ({ type, currentMediaStatus }) => socket.broadcast.emit("updateUserMedia", { type, currentMediaStatus }));
+
+  socket.on("callUser", ({ userToCall, signalData, from, displayName }) =>
+    io.to(userToCall).emit("callUser", {
+      signal: signalData,
+      from,
+      displayName,
+    })
+  );
 
   socket.on("answerCall", (data) => io.to(data.to).emit("callAccepted", data.signal));
 });

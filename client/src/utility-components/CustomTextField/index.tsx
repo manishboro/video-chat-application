@@ -99,6 +99,7 @@ interface CustomTextFieldProps {
   disabled?: boolean;
   style?: React.CSSProperties;
   inputStyle?: React.CSSProperties;
+  customRef?: any;
 }
 
 const CustomTextField: React.FC<CustomTextFieldProps> = ({
@@ -114,6 +115,7 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
   touched,
   required = true,
   disabled = false,
+  customRef,
   style = {},
   inputStyle = {},
 }) => {
@@ -132,8 +134,8 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
       required={required}
       className={classes.textField}
       classes={{ root: classes.textField }}
-      inputProps={{ style: { fontSize: "1.7rem", padding: "1.5rem", ...inputStyle } }}
-      InputLabelProps={{ style: { fontSize: "1.7rem" } }}
+      inputProps={{ /* style: { fontSize: "1.7rem", padding: "1.5rem", ...inputStyle },*/ ref: customRef }}
+      // InputLabelProps={{ style: { fontSize: "1.7rem" } }}
       disabled={disabled}
       style={{ ...style }}
     />

@@ -69,7 +69,7 @@ const AlertContextProvider: React.FC = ({ children }) => {
         message={messageInfo ? messageInfo.message : undefined}
         onClose={handleClose}
       >
-        <Alert onClose={handleClose} variant={alertProps.variant} severity={alertProps.severity} sx={{ width: "100%", fontSize: "1.7rem" }}>
+        <Alert onClose={handleClose} variant={alertProps.variant} severity={alertProps.severity} sx={{ width: "100%" }}>
           {messageInfo?.message}
         </Alert>
       </Snackbar>
