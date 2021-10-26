@@ -1,5 +1,6 @@
 import { styled } from "@mui/material/styles";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import Home from "./pages/home";
 
 import VideoPage from "./pages/video";
 
@@ -16,8 +17,12 @@ const App = () => {
     <StyledRoot>
       <Router>
         <Switch>
-          <Route path="/" exact>
+          <Route path="/:roomId" exact>
             <VideoPage />
+          </Route>
+
+          <Route path="/" exact>
+            <Home />
           </Route>
         </Switch>
       </Router>

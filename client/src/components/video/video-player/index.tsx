@@ -10,6 +10,16 @@ type VideoRef = React.LegacyRef<HTMLVideoElement> | undefined;
 const useStyles = makeStyles({
   root: { position: "relative" },
 
+  displayName: {
+    position: "absolute",
+    top: "10px",
+    left: "10px",
+    backgroundColor: "rgba(0, 0, 0, .5)",
+    color: "white",
+    padding: "5px",
+    fontFamily: "Montserrat",
+  },
+
   listsContainer: {
     position: "absolute",
     bottom: "1.5rem",
@@ -41,17 +51,28 @@ interface VideoPlayerProps {
   videoBool: boolean | undefined;
   updateMic?: () => void;
   updateVideo?: () => void;
+  displayName: string | undefined;
   height?: string;
   width?: string;
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoRef, audioBool, videoBool, height, width, updateMic, updateVideo }) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({
+  videoRef,
+  audioBool,
+  videoBool,
+  height,
+  width,
+  displayName,
+  updateMic,
+  updateVideo,
+}) => {
   const classes = useStyles();
-  const ctx = useSocketContext();
 
   return (
     <div className={classes.root}>
       <StyledVideoPlayer width={width ?? "100%"} height={height ?? "auto"} playsInline muted ref={videoRef} autoPlay />
+
+      {displayName && <div className={classes.displayName}>{displayName}</div>}
 
       <ul className={classes.listsContainer}>
         <li>

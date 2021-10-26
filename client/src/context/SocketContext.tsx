@@ -1,9 +1,10 @@
 import React from "react";
 import Peer from "simple-peer";
 import { io } from "socket.io-client";
+import { useParams } from "react-router-dom";
 
-import { getItemFromStorage } from "../utils/localStorage";
 import { useAlertContext } from "./AlertContext";
+import { useUserContext } from "./UserContext";
 
 export interface AppContextInterface {
   ctxData: CtxDataInterface;
@@ -27,12 +28,13 @@ export interface CtxDataInterface {
   audio: boolean;
   userVideo: boolean | undefined;
   userAudio: boolean | undefined;
-  displayName: string;
+  myRoom: [string] | [];
   me: string;
 }
 
 type CtxDataCall = { isReceivingCall: boolean; from: string; displayName: string; signal: any } | undefined;
-type SetDataValue = boolean | string | MediaStream | CtxDataCall;
+type SetDataValue = boolean | string | MediaStream | CtxDataCall | [string] | [];
+type UserConnectedData = { roomId: string; myRoom: [string] | [] };
 
 const AppCtx = React.createContext<AppContextInterface | null>(null);
 
@@ -42,6 +44,8 @@ const socket = io("http://localhost:3001");
 
 const SocketContextProvider: React.FC = ({ children }) => {
   const alert = useAlertContext();
+  const userCtx = useUserContext();
+  let params = useParams<{ roomId: string }>();
 
   const [ctxData, setCtxData] = React.useState<CtxDataInterface>({
     callAccepted: false,
@@ -52,8 +56,8 @@ const SocketContextProvider: React.FC = ({ children }) => {
     audio: true,
     userAudio: true,
     userVideo: true,
-    displayName: "",
-    me: "",
+    myRoom: [],
+    me: "", // my socket id
   });
 
   const handleSetData = (key: string, value: SetDataValue) => setCtxData((prev) => ({ ...prev, [key]: value }));
@@ -63,39 +67,15 @@ const SocketContextProvider: React.FC = ({ children }) => {
   const userVideo = React.useRef<any>(null);
   const connectionRef = React.useRef<any>(null);
 
+  console.log("call", ctxData.call);
+
   React.useEffect(() => {
     let stream = null;
 
     const getMedia = async () => {
-      if (!videoPlayer.current) return; // Check whether video player is rendered or not
-
-      // Returns us an ID as soon as the connection is established
-      socket.on("me", (id) => handleSetData("me", id));
-
-      socket.on("callUser", ({ from, displayName, signal }) => handleSetData("call", { isReceivingCall: true, from, displayName, signal }));
-
-      socket.on("updateUserMedia", ({ type, currentMediaStatus }) => {
-        if (currentMediaStatus !== null || currentMediaStatus !== []) {
-          switch (type) {
-            case "video":
-              handleSetData("userVideo", currentMediaStatus);
-              break;
-
-            case "mic":
-              handleSetData("userAudio", currentMediaStatus);
-              break;
-
-            default:
-              handleSetData("userVideo", undefined);
-              handleSetData("userAudio", undefined);
-              break;
-          }
-        }
-      });
+      // if (!videoPlayer.current) return; // Check whether video player is rendered or not
 
       try {
-        if (getItemFromStorage("displayName")) handleSetData("displayName", getItemFromStorage("displayName") ?? "");
-
         stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
 
         if (stream) {
@@ -110,6 +90,42 @@ const SocketContextProvider: React.FC = ({ children }) => {
     };
 
     getMedia();
+
+    // Listen for the me event which will be sent from server
+    socket.on("me", (id) => handleSetData("me", id));
+
+    // Emit roomId to server
+    socket.emit("join-room", params.roomId);
+
+    // Listen for the user-connected event which will be sent from server
+    socket.on("user-connected", (data: UserConnectedData) => {
+      handleSetData("myRoom", data.myRoom);
+    });
+
+    socket.on("callUser2", ({ from, displayName, signal }) => {
+      console.log("callUser2", from, displayName, signal);
+      handleSetData("call", { isReceivingCall: true, from, displayName, signal });
+    });
+
+    socket.on("updateUserMedia", ({ type, currentMediaStatus }) => {
+      if (currentMediaStatus !== null || currentMediaStatus !== []) {
+        switch (type) {
+          case "video":
+            handleSetData("userVideo", currentMediaStatus);
+            break;
+
+          case "mic":
+            handleSetData("userAudio", currentMediaStatus);
+            break;
+
+          default:
+            handleSetData("userVideo", undefined);
+            handleSetData("userAudio", undefined);
+            break;
+        }
+      }
+    });
+
     // eslint-disable-next-line
   }, []);
 
@@ -141,10 +157,16 @@ const SocketContextProvider: React.FC = ({ children }) => {
   const answerCall = () => {
     handleSetData("callAccepted", true);
 
-    const peer = new Peer({ initiator: false, trickle: false, stream: ctxData.stream });
+    const peer = new Peer({
+      initiator: false,
+      trickle: false,
+      stream: ctxData.stream,
+    });
 
     peer.on("signal", (data) => socket.emit("answerCall", { signal: data, to: ctxData.call?.from }));
+
     peer.on("stream", (currentStream) => (userVideo.current.srcObject = currentStream));
+
     peer.signal(ctxData.call?.signal);
 
     connectionRef.current = peer;
@@ -158,17 +180,20 @@ const SocketContextProvider: React.FC = ({ children }) => {
       stream: ctxData.stream,
     });
 
+    // Establishing a handshake with the person to call
     peer.on("signal", (data) =>
       socket.emit("callUser", {
         userToCall: id,
         signalData: data,
         from: ctxData.me,
-        displayName: ctxData.displayName,
+        displayName: userCtx?.displayName,
       })
     );
 
+    // Gets the incoming data
     peer.on("stream", (currentStream) => (userVideo.current.srcObject = currentStream));
 
+    // Completing the handshake
     socket.on("callAccepted", (signal) => {
       handleSetData("callAccepted", true);
       peer.signal(signal);
@@ -196,6 +221,7 @@ const SocketContextProvider: React.FC = ({ children }) => {
     callUser,
     leaveCall,
   };
+
   return <AppCtx.Provider value={appContext}>{children}</AppCtx.Provider>;
 };
 
