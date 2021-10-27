@@ -118,11 +118,6 @@ const SocketContextProvider: React.FC = ({ children }) => {
       handleSetData("callerDetails", { isReceivingCall: true, from, displayName, signal });
     });
 
-    // socket.on("receiveCall", ({ from, displayName, signal }) => {
-    //   console.log("receiveCall", from, displayName, signal);
-    //   handleSetData("receiverDetails", { isReceivingCall: true, from, displayName, signal });
-    // });
-
     socket.on("updateUserMedia", ({ type, currentMediaStatus }) => {
       if (currentMediaStatus !== null || currentMediaStatus !== []) {
         switch (type) {
@@ -217,12 +212,7 @@ const SocketContextProvider: React.FC = ({ children }) => {
     peer.on("stream", (currentStream) => (userVideo.current.srcObject = currentStream));
 
     // Completing the handshake
-    // socket.on("callAccepted", (signal) => {
-    //   handleSetData("callAccepted", true);
-    //   peer.signal(signal);
-    // });
-
-    socket.on("receiveCall", (data) => {
+    socket.on("callAccepted", (data) => {
       handleSetData("callAccepted", true);
 
       handleSetData("receiverDetails", {

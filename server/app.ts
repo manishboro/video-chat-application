@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
+import path from "path";
 import { createServer } from "http";
 import { Server, Socket } from "socket.io";
 
@@ -12,7 +13,13 @@ const io = new Server(httpServer, {
 
 app.use(cors(), express.json());
 
-app.get("/", (req: Request, res: Response) => res.send("<h1>API server is running!!</h1>"));
+app.use(express.static(path.resolve(__dirname, "../client/build")));
+
+app.get("/api", (req: Request, res: Response) => res.send("<h1>API server is running!!</h1>"));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
+});
 
 io.on("connection", (socket: Socket) => {
   // Sends the socket ID of the connected user to the client
@@ -44,7 +51,7 @@ io.on("connection", (socket: Socket) => {
   // socket.on("answerCall", (data) => io.to(data.to).emit("callAccepted", data.signal));
 
   socket.on("answerCall", ({ caller, receiverId, signalData, displayName }) =>
-    io.to(caller).emit("receiveCall", {
+    io.to(caller).emit("callAccepted", {
       signal: signalData,
       receiverId,
       displayName,
