@@ -44,18 +44,18 @@ const VideoPlayerOverview = () => {
   const ctx = useSocketContext();
   const userCtx = useUserContext();
 
-  console.log(ctx?.ctxData.call?.displayName);
+  console.log(ctx?.ctxData.callerDetails?.displayName);
 
   return (
     ctx && (
       <>
         <div className={classes.videoContainer} ref={ctx.videoPlayer}>
           {/* Our own video */}
-          {ctx.ctxData.stream && (
+          {ctx.ctxData.myStream && (
             <VideoPlayer
               videoRef={ctx.myVideo}
-              audioBool={ctx.ctxData.audio}
-              videoBool={ctx.ctxData.video}
+              audioBool={ctx.ctxData.myAudioOn}
+              videoBool={ctx.ctxData.myVideoOn}
               displayName={userCtx?.displayName}
               updateMic={ctx.updateMic}
               updateVideo={ctx.updateVideo}
@@ -66,15 +66,15 @@ const VideoPlayerOverview = () => {
           {ctx.ctxData.callAccepted && !ctx.ctxData.callEnded && (
             <VideoPlayer
               videoRef={ctx.userVideo}
-              audioBool={ctx.ctxData.userAudio}
-              displayName={ctx.ctxData.call?.displayName}
-              videoBool={ctx.ctxData.userVideo}
+              displayName={ctx.ctxData.callerDetails?.displayName ?? ctx.ctxData.receiverDetails?.displayName}
+              audioBool={ctx.ctxData.userAudioOn}
+              videoBool={ctx.ctxData.userVideoOn}
             />
           )}
 
-          {ctx && ctx.ctxData.call?.isReceivingCall && !ctx.ctxData.callAccepted && (
+          {ctx && ctx.ctxData.callerDetails?.isReceivingCall && !ctx.ctxData.callAccepted && (
             <div className={classes.joinMeetingContainer}>
-              <p>{ctx.ctxData.call?.displayName} wants to join</p>
+              <p>{ctx.ctxData.callerDetails?.displayName} wants to join</p>
               <Button variant="contained" color="primary" onClick={ctx.answerCall} style={{ marginLeft: "20px" }}>
                 Accept
               </Button>
@@ -85,7 +85,7 @@ const VideoPlayerOverview = () => {
         <div style={{ position: "absolute", top: 0, zIndex: 100 }}>
           {ctx?.ctxData.myRoom.map(
             (id) =>
-              id !== ctx.ctxData.me && (
+              id !== ctx.ctxData.mySocketId && (
                 <button key={nanoid()} onClick={() => ctx.callUser(id)}>
                   Call {id}
                 </button>

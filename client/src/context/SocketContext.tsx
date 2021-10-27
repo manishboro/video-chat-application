@@ -20,21 +20,35 @@ export interface AppContextInterface {
 }
 
 export interface CtxDataInterface {
+  mySocketId: string;
+  myStream: MediaStream | undefined;
   callAccepted: boolean;
   callEnded: boolean;
-  stream: MediaStream | undefined;
-  call: CtxDataCall;
-  video: boolean;
-  audio: boolean;
-  userVideo: boolean | undefined;
-  userAudio: boolean | undefined;
+  callerDetails: CtxDataCaller;
+  receiverDetails: any;
+  myVideoOn: boolean;
+  myAudioOn: boolean;
+  userVideoOn: boolean | undefined;
+  userAudioOn: boolean | undefined;
   myRoom: [string] | [];
-  me: string;
 }
 
-type CtxDataCall = { isReceivingCall: boolean; from: string; displayName: string; signal: any } | undefined;
-type SetDataValue = boolean | string | MediaStream | CtxDataCall | [string] | [];
+type CtxDataCaller = { isReceivingCall: boolean; from: string; displayName: string; signal: any } | undefined;
+type CtxDataReceiver = { receiverId: string; displayName: string; signal: any } | undefined;
+type SetDataValue = boolean | string | MediaStream | CtxDataCaller | CtxDataReceiver | [string] | [];
 type UserConnectedData = { roomId: string; myRoom: [string] | [] };
+type HandleSetDataKeys =
+  | "mySocketId"
+  | "myStream"
+  | "callAccepted"
+  | "callEnded"
+  | "callerDetails"
+  | "receiverDetails"
+  | "myVideoOn"
+  | "myAudioOn"
+  | "userVideoOn"
+  | "userAudioOn"
+  | "myRoom";
 
 const AppCtx = React.createContext<AppContextInterface | null>(null);
 
@@ -48,38 +62,35 @@ const SocketContextProvider: React.FC = ({ children }) => {
   let params = useParams<{ roomId: string }>();
 
   const [ctxData, setCtxData] = React.useState<CtxDataInterface>({
+    mySocketId: "",
+    myStream: undefined,
     callAccepted: false,
     callEnded: false,
-    stream: undefined,
-    call: undefined,
-    video: true,
-    audio: true,
-    userAudio: true,
-    userVideo: true,
+    callerDetails: undefined,
+    receiverDetails: undefined,
+    myVideoOn: true,
+    myAudioOn: true,
+    userVideoOn: true,
+    userAudioOn: true,
     myRoom: [],
-    me: "", // my socket id
   });
 
-  const handleSetData = (key: string, value: SetDataValue) => setCtxData((prev) => ({ ...prev, [key]: value }));
+  const handleSetData = (key: HandleSetDataKeys, value: SetDataValue) => setCtxData((prev) => ({ ...prev, [key]: value }));
 
   const videoPlayer = React.useRef<any>(null);
   const myVideo = React.useRef<any>(null);
   const userVideo = React.useRef<any>(null);
   const connectionRef = React.useRef<any>(null);
 
-  console.log("call", ctxData.call);
-
   React.useEffect(() => {
     let stream = null;
 
     const getMedia = async () => {
-      // if (!videoPlayer.current) return; // Check whether video player is rendered or not
-
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
 
         if (stream) {
-          handleSetData("stream", stream);
+          handleSetData("myStream", stream);
           myVideo.current.srcObject = stream;
         }
       } catch (err: any) {
@@ -91,36 +102,41 @@ const SocketContextProvider: React.FC = ({ children }) => {
 
     getMedia();
 
-    // Listen for the me event which will be sent from server
-    socket.on("me", (id) => handleSetData("me", id));
+    //Gets the socket id from the server
+    socket.on("mySocketId", (id) => handleSetData("mySocketId", id));
 
-    // Emit roomId to server
+    // Send roomId to server
     socket.emit("join-room", params.roomId);
 
-    // Listen for the user-connected event which will be sent from server
+    // Get all socket Ids present in a room when somebody joins a room
     socket.on("user-connected", (data: UserConnectedData) => {
       handleSetData("myRoom", data.myRoom);
     });
 
-    socket.on("callUser2", ({ from, displayName, signal }) => {
-      console.log("callUser2", from, displayName, signal);
-      handleSetData("call", { isReceivingCall: true, from, displayName, signal });
+    socket.on("listenForCall", ({ from, displayName, signal }) => {
+      console.log("listenForCall", from, displayName, signal);
+      handleSetData("callerDetails", { isReceivingCall: true, from, displayName, signal });
     });
+
+    // socket.on("receiveCall", ({ from, displayName, signal }) => {
+    //   console.log("receiveCall", from, displayName, signal);
+    //   handleSetData("receiverDetails", { isReceivingCall: true, from, displayName, signal });
+    // });
 
     socket.on("updateUserMedia", ({ type, currentMediaStatus }) => {
       if (currentMediaStatus !== null || currentMediaStatus !== []) {
         switch (type) {
           case "video":
-            handleSetData("userVideo", currentMediaStatus);
+            handleSetData("userVideoOn", currentMediaStatus);
             break;
 
           case "mic":
-            handleSetData("userAudio", currentMediaStatus);
+            handleSetData("userAudioOn", currentMediaStatus);
             break;
 
           default:
-            handleSetData("userVideo", undefined);
-            handleSetData("userAudio", undefined);
+            handleSetData("userVideoOn", undefined);
+            handleSetData("userAudioOn", undefined);
             break;
         }
       }
@@ -131,26 +147,26 @@ const SocketContextProvider: React.FC = ({ children }) => {
 
   // To change video status
   const updateVideo = () => {
-    handleSetData("video", !ctxData.video);
+    handleSetData("myVideoOn", !ctxData.myVideoOn);
 
     socket.emit("updateMyMedia", {
       type: "video",
-      currentMediaStatus: !ctxData.video,
+      currentMediaStatus: !ctxData.myVideoOn,
     });
 
-    if (ctxData.stream) ctxData.stream.getVideoTracks()[0].enabled = !ctxData.video;
+    if (ctxData.myStream) ctxData.myStream.getVideoTracks()[0].enabled = !ctxData.myVideoOn;
   };
 
   // To change mic status
   const updateMic = () => {
-    handleSetData("audio", !ctxData.audio);
+    handleSetData("myAudioOn", !ctxData.myAudioOn);
 
     socket.emit("updateMyMedia", {
       type: "mic",
-      currentMediaStatus: !ctxData.audio,
+      currentMediaStatus: !ctxData.myAudioOn,
     });
 
-    if (ctxData.stream) ctxData.stream.getAudioTracks()[0].enabled = !ctxData.audio;
+    if (ctxData.myStream) ctxData.myStream.getAudioTracks()[0].enabled = !ctxData.myAudioOn;
   };
 
   // To answer a call
@@ -160,14 +176,21 @@ const SocketContextProvider: React.FC = ({ children }) => {
     const peer = new Peer({
       initiator: false,
       trickle: false,
-      stream: ctxData.stream,
+      stream: ctxData.myStream,
     });
 
-    peer.on("signal", (data) => socket.emit("answerCall", { signal: data, to: ctxData.call?.from }));
+    peer.on("signal", (data) =>
+      socket.emit("answerCall", {
+        signalData: data,
+        receiverId: ctxData.mySocketId,
+        displayName: userCtx?.displayName,
+        caller: ctxData.callerDetails?.from,
+      })
+    );
 
     peer.on("stream", (currentStream) => (userVideo.current.srcObject = currentStream));
 
-    peer.signal(ctxData.call?.signal);
+    peer.signal(ctxData.callerDetails?.signal);
 
     connectionRef.current = peer;
   };
@@ -177,7 +200,7 @@ const SocketContextProvider: React.FC = ({ children }) => {
     const peer = new Peer({
       initiator: true,
       trickle: false,
-      stream: ctxData.stream,
+      stream: ctxData.myStream,
     });
 
     // Establishing a handshake with the person to call
@@ -185,7 +208,7 @@ const SocketContextProvider: React.FC = ({ children }) => {
       socket.emit("callUser", {
         userToCall: id,
         signalData: data,
-        from: ctxData.me,
+        from: ctxData.mySocketId,
         displayName: userCtx?.displayName,
       })
     );
@@ -194,9 +217,21 @@ const SocketContextProvider: React.FC = ({ children }) => {
     peer.on("stream", (currentStream) => (userVideo.current.srcObject = currentStream));
 
     // Completing the handshake
-    socket.on("callAccepted", (signal) => {
+    // socket.on("callAccepted", (signal) => {
+    //   handleSetData("callAccepted", true);
+    //   peer.signal(signal);
+    // });
+
+    socket.on("receiveCall", (data) => {
       handleSetData("callAccepted", true);
-      peer.signal(signal);
+
+      handleSetData("receiverDetails", {
+        receiverId: data.receiverId,
+        displayName: data.displayName,
+        signal: data.signal,
+      });
+
+      peer.signal(data.signal);
     });
 
     connectionRef.current = peer;

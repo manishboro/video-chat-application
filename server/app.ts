@@ -15,10 +15,10 @@ app.use(cors(), express.json());
 app.get("/", (req: Request, res: Response) => res.send("<h1>API server is running!!</h1>"));
 
 io.on("connection", (socket: Socket) => {
-  // Emits the socket ID of the connected user
-  socket.emit("me", socket.id);
+  // Sends the socket ID of the connected user to the client
+  socket.emit("mySocketId", socket.id);
 
-  socket.on("join-room", (roomName) => {
+  socket.on("join-room", (roomName: string) => {
     // Join a room
     socket.join(roomName);
 
@@ -28,28 +28,30 @@ io.on("connection", (socket: Socket) => {
     // Get sockets connected to a particular room
     let myRoom = allRooms.get(roomName);
 
-    // Converting myRoom Set to an Array
-    let arrMyRoom = Array.from(myRoom ?? []);
-
-    console.log(myRoom, arrMyRoom);
-
     // Sending room details to all the connected client even to myself
-    io.to(roomName).emit("user-connected", { roomId: roomName, myRoom: Array.from(myRoom ?? []) });
+    io.to(roomName).emit("user-connected", { roomId: roomName, myRoom: Array.from(myRoom ?? []) }); // Converting myRoom Set to an Array
   });
 
-  socket.on("disconnect", () => {
-    socket.broadcast.emit("callEnded");
-  });
-
-  socket.on("updateMyMedia", ({ type, currentMediaStatus }) => socket.broadcast.emit("updateUserMedia", { type, currentMediaStatus }));
-
+  // Send my information to the person whom we are calling
   socket.on("callUser", ({ userToCall, signalData, from, displayName }) =>
-    io.to(userToCall).emit("callUser2", {
+    io.to(userToCall).emit("listenForCall", {
       signal: signalData,
       from,
       displayName,
     })
   );
 
-  socket.on("answerCall", (data) => io.to(data.to).emit("callAccepted", data.signal));
+  // socket.on("answerCall", (data) => io.to(data.to).emit("callAccepted", data.signal));
+
+  socket.on("answerCall", ({ caller, receiverId, signalData, displayName }) =>
+    io.to(caller).emit("receiveCall", {
+      signal: signalData,
+      receiverId,
+      displayName,
+    })
+  );
+
+  socket.on("updateMyMedia", ({ type, currentMediaStatus }) => socket.broadcast.emit("updateUserMedia", { type, currentMediaStatus }));
+
+  socket.on("disconnect", () => socket.broadcast.emit("callEnded"));
 });
