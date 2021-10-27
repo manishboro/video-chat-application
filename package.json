@@ -4,13 +4,14 @@
   "description": "A video chat application made using React, NodeJS and Socket.io",
   "main": "server.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --pretty --transpile-only server/index.ts",
+    "dev": "concurrently \"ts-node-dev --respawn --pretty --transpile-only server/index.ts\" \"cd client && npm start\"",
     "build": "tsc && cd client && npm install && npm run build",
     "start": "node server/build/index.js"
   },
   "author": "manish_boro",
   "license": "ISC",
   "dependencies": {
+    "concurrently": "^6.3.0",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
