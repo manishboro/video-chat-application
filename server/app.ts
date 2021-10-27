@@ -17,6 +17,10 @@ app.use(cors(), express.json());
 
 app.get("/api", (req: Request, res: Response) => res.send("<h1>API server is running!!</h1>"));
 
+app.get("*", (req, res) => {
+  res.sendFile(path.resolve(__dirname, "../../client/build", "index.html"));
+});
+
 io.on("connection", (socket: Socket) => {
   // Sends the socket ID of the connected user to the client
   socket.emit("mySocketId", socket.id);
@@ -60,7 +64,3 @@ io.on("connection", (socket: Socket) => {
 
   socket.on("disconnect", () => socket.broadcast.emit("callEnded"));
 });
-
-// app.get("*", (req, res) => {
-//   res.sendFile(path.resolve(__dirname, "../../client/build", "index.html"));
-// });
