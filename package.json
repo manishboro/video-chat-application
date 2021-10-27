@@ -6,8 +6,7 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --pretty --transpile-only server/index.ts",
     "build": "cd client && npm install && npm run build",
-    "start": "node server/index.js",
-    "postinstall": "tsc"
+    "start": "node server/index.js"
   },
   "author": "manish_boro",
   "license": "ISC",
