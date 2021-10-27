@@ -5,6 +5,8 @@
   "main": "server.js",
   "scripts": {
     "dev": "concurrently \"ts-node-dev --respawn --pretty --transpile-only server/index.ts\" \"cd client && npm start\"",
+    "dev:server": "ts-node-dev --respawn --pretty --transpile-only server/index.ts",
+    "dev:client": "cd client && npm start",
     "build": "tsc && cd client && npm install && npm run build",
     "start": "node server/build/index.js"
   },

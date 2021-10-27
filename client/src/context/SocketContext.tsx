@@ -54,7 +54,7 @@ const AppCtx = React.createContext<AppContextInterface | null>(null);
 
 export const useSocketContext = () => React.useContext(AppCtx);
 
-const socket = io("https://video-chat-app-02.herokuapp.com/");
+const socket = io(process.env.REACT_APP_IO_URI ?? "/");
 
 const SocketContextProvider: React.FC = ({ children }) => {
   const alert = useAlertContext();

@@ -13,13 +13,9 @@ const io = new Server(httpServer, {
 
 app.use(cors(), express.json());
 
-app.use(express.static(path.resolve(__dirname, "../../client/build")));
+// app.use(express.static(path.resolve(__dirname, "../../client/build")));
 
 app.get("/api", (req: Request, res: Response) => res.send("<h1>API server is running!!</h1>"));
-
-app.get("*", (req, res) => {
-  res.sendFile(path.resolve(__dirname, "../../client/build", "index.html"));
-});
 
 io.on("connection", (socket: Socket) => {
   // Sends the socket ID of the connected user to the client
@@ -34,6 +30,8 @@ io.on("connection", (socket: Socket) => {
 
     // Get sockets connected to a particular room
     let myRoom = allRooms.get(roomName);
+
+    console.log(myRoom);
 
     // Sending room details to all the connected client even to myself
     io.to(roomName).emit("user-connected", { roomId: roomName, myRoom: Array.from(myRoom ?? []) }); // Converting myRoom Set to an Array
@@ -62,3 +60,7 @@ io.on("connection", (socket: Socket) => {
 
   socket.on("disconnect", () => socket.broadcast.emit("callEnded"));
 });
+
+// app.get("*", (req, res) => {
+//   res.sendFile(path.resolve(__dirname, "../../client/build", "index.html"));
+// });
