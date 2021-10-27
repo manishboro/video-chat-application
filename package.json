@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --pretty --transpile-only server/index.ts",
     "build": "cd client && npm install && npm run build",
-    "start": "node server/index.ts"
+    "start": "node server/index.js",
+    "postinstall": "tsc"
   },
   "author": "manish_boro",
   "license": "ISC",
@@ -23,7 +24,7 @@
     "@types/node": "^16.10.2",
     "nodemon": "^2.0.13",
     "ts-node-dev": "^1.1.8",
-    "typescript": "^4.4.3"
+    "typescript": "^4.4.4"
   },
   "engines": {
     "node": "v16.4.0"
