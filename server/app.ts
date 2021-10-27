@@ -13,7 +13,7 @@ const io = new Server(httpServer, {
 
 app.use(cors(), express.json());
 
-// app.use(express.static(path.resolve(__dirname, "../../client/build")));
+app.use(express.static(path.resolve(__dirname, "../../client/build")));
 
 app.get("/api", (req: Request, res: Response) => res.send("<h1>API server is running!!</h1>"));
 
