@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --pretty --transpile-only server/index.ts",
-    "build": "cd client && npm install && npm run build"
+    "build": "cd client && npm install && npm run build",
+    "start": "node server/index.ts"
   },
   "author": "manish_boro",
   "license": "ISC",
