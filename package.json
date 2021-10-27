@@ -5,8 +5,8 @@
   "main": "server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --pretty --transpile-only server/index.ts",
-    "build": "tsc server/index.ts && cd client && npm install && npm run build",
-    "start": "node server/index.js"
+    "build": "tsc && cd client && npm install && npm run build",
+    "start": "node server/build/index.js"
   },
   "author": "manish_boro",
   "license": "ISC",
@@ -15,7 +15,8 @@
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "nanoid": "^3.1.28",
-    "socket.io": "^4.2.0"
+    "socket.io": "^4.2.0",
+    "ts-node": "^10.4.0"
   },
   "devDependencies": {
     "@types/dotenv": "^8.2.0",

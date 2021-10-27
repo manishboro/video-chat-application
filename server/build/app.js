@@ -1,21 +1,24 @@
 "use strict";
-exports.__esModule = true;
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.httpServer = void 0;
-var express_1 = require("express");
-var cors_1 = require("cors");
-var path_1 = require("path");
+var express_1 = __importDefault(require("express"));
+var cors_1 = __importDefault(require("cors"));
+var path_1 = __importDefault(require("path"));
 var http_1 = require("http");
 var socket_io_1 = require("socket.io");
-var app = (0, express_1["default"])();
+var app = (0, express_1.default)();
 exports.httpServer = (0, http_1.createServer)(app);
 var io = new socket_io_1.Server(exports.httpServer, {
-    cors: { origin: "*", methods: ["GET", "POST"] }
+    cors: { origin: "*", methods: ["GET", "POST"] },
 });
-app.use((0, cors_1["default"])(), express_1["default"].json());
-app.use(express_1["default"].static(path_1["default"].resolve(__dirname, "../client/build")));
+app.use((0, cors_1.default)(), express_1.default.json());
+app.use(express_1.default.static(path_1.default.resolve(__dirname, "../client/build")));
 app.get("/api", function (req, res) { return res.send("<h1>API server is running!!</h1>"); });
 app.get("*", function (req, res) {
-    res.sendFile(path_1["default"].resolve(__dirname, "../client/build", "index.html"));
+    res.sendFile(path_1.default.resolve(__dirname, "../client/build", "index.html"));
 });
 io.on("connection", function (socket) {
     // Sends the socket ID of the connected user to the client
@@ -36,7 +39,7 @@ io.on("connection", function (socket) {
         return io.to(userToCall).emit("listenForCall", {
             signal: signalData,
             from: from,
-            displayName: displayName
+            displayName: displayName,
         });
     });
     // socket.on("answerCall", (data) => io.to(data.to).emit("callAccepted", data.signal));
@@ -45,7 +48,7 @@ io.on("connection", function (socket) {
         return io.to(caller).emit("callAccepted", {
             signal: signalData,
             receiverId: receiverId,
-            displayName: displayName
+            displayName: displayName,
         });
     });
     socket.on("updateMyMedia", function (_a) {
