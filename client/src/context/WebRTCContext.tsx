@@ -3,6 +3,26 @@ import { io } from "socket.io-client";
 import { useParams } from "react-router-dom";
 import { useUserContext } from "./UserContext";
 
+export interface WebRTCContext {
+  mySocketId: string;
+  myRoom: RoomType;
+  isReceivingCall: boolean;
+  isCallAccepted: boolean;
+  callerDetails: CallerDetailsType;
+  receiverDetails: ReceiverDetailsType;
+  localStreamRef: any;
+  remoteStreamRef: any;
+  makeCall(id: string): void;
+  answerCall(): void;
+}
+
+export type RoomType = string[] | [];
+export type IceCandidatesType = RTCIceCandidate[] | [];
+export type AddIceCandidateType = { iceCandidate: RTCIceCandidate; to: string; senderType: string };
+export type UserConnectedType = { roomId: string; myRoom: RoomType };
+export type CallerDetailsType = { callerId: string; displayName: string; sdpOffer: RTCSessionDescriptionInit } | undefined;
+export type ReceiverDetailsType = { receiverId: string; displayName: string; sdpAnswer: RTCSessionDescriptionInit } | undefined;
+
 const socket = io(process.env.REACT_APP_IO_URI ?? "/");
 
 let configuration = {
@@ -14,32 +34,27 @@ let constraints = { audio: true, video: true };
 
 const pc = new RTCPeerConnection(configuration);
 
-const WebRTCCtx = React.createContext<any>(null);
+const WebRTCCtx = React.createContext<WebRTCContext | null>(null);
 export const useWebRtcCtx = () => React.useContext(WebRTCCtx);
-
-// pc.onicecandidate = (e) => console.log("New ice candidate!");
 
 const WebRTCContextProvider: React.FC = ({ children }) => {
   let params = useParams<{ roomId: string }>();
   const userCtx = useUserContext();
 
-  // Create refs to store the local and remote stream
-  const localStreamRef = React.useRef<any>(null);
-  const remoteStreamRef = React.useRef<any>(null);
-
   // States
   const [mySocketId, setMySocketId] = React.useState("");
-  const [myRoom, setMyRoom] = React.useState<any>([]);
+  const [myRoom, setMyRoom] = React.useState<RoomType>([]);
 
-  const [callerDetails, setCallerDetails] = React.useState<any>();
-  const [receiverDetails, setReceiverDetails] = React.useState<any>();
-  const [iceCandidates, setIceCandidates] = React.useState<any>([]);
+  const [callerDetails, setCallerDetails] = React.useState<CallerDetailsType>();
+  const [receiverDetails, setReceiverDetails] = React.useState<ReceiverDetailsType>();
+  const [iceCandidates, setIceCandidates] = React.useState<IceCandidatesType>([]);
 
-  const [isReceivingCall, setIsReceivingCall] = React.useState(false);
-  const [isCallAccepted, setIsCallAccepted] = React.useState(false);
+  const [isReceivingCall, setIsReceivingCall] = React.useState(false); // Only applicable on the receiver side
+  const [isCallAccepted, setIsCallAccepted] = React.useState(false); // This state has to be common across local and remote connection
 
-  const [localUserDetails, setLocalUserDetails] = React.useState<any>();
-  const [remoteUserDetails, setRemoteUserDetails] = React.useState<any>();
+  // Create refs to store the local and remote stream
+  const localStreamRef = React.useRef<HTMLVideoElement | null>(null);
+  const remoteStreamRef = React.useRef<HTMLVideoElement | null>(null);
 
   React.useEffect(() => {
     const getUserMedia = async () => {
@@ -61,8 +76,10 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
         });
 
         /* Add the streams to refs so that the video can be displayed */
-        localStreamRef.current.srcObject = localStream;
-        remoteStreamRef.current.srcObject = remoteStream;
+        if (localStreamRef.current && remoteStreamRef.current) {
+          localStreamRef.current.srcObject = localStream;
+          remoteStreamRef.current.srcObject = remoteStream;
+        }
       } catch (err: any) {
         alert(err.message);
       }
@@ -71,63 +88,52 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
     getUserMedia();
 
     /* Socket Events and Emitters */
-    //Gets my socket id from the server
-    socket.on("mySocketId", (id) => setMySocketId(id));
+    // Gets my socket id from the server | Emitter => server
+    socket.on("mySocketId", (id: string) => setMySocketId(id));
 
     // Send roomId to server
     socket.emit("join-room", params.roomId);
 
     // Get all socket Ids present in a room. The event is emitted when somebody joins a room.
-    socket.on("user-connected", (data) => setMyRoom(data.myRoom));
+    socket.on("user-connected", (data: UserConnectedType) => setMyRoom(data.myRoom));
 
     // Get callerDetails
-    socket.on("listen-for-call", ({ sdpOffer, callerId, displayName }) => {
+    socket.on("listen-for-call", (data: CallerDetailsType) => {
       // Set received offer using setRemoteDescription()
-      setCallerDetails({ callerId, displayName, sdpOffer });
-      setIsReceivingCall(true);
+      if (data?.callerId && data?.displayName && data?.sdpOffer) {
+        const { callerId, displayName, sdpOffer } = data;
+        setCallerDetails({ callerId, displayName, sdpOffer });
+        setIsReceivingCall(true);
+      }
     });
 
     // Set ICE candidate
-    socket.on("add-ice-candidate", (data) => {
+    socket.on("add-ice-candidate", (data: AddIceCandidateType) => {
       /* 
         Ice candidates cannot be added without setting remote description.
         For the caller side, we only receive ice candidates after local description relative to the receiver has been set.
-        By that time, on the caller side remote description has already been set. 
+        By that time, on the caller side remote description has already been set. So we can set the ice-candidates for the caller directly on the event listener itself.
       */
       if (data.iceCandidate) {
         if (data.senderType === "receiver") {
           console.log("add ice-candidate on the caller side");
+          console.log("iceCandidate", "sent by receiver", data.iceCandidate);
           return pc.addIceCandidate(new RTCIceCandidate(data.iceCandidate));
         }
 
         if (data.senderType === "caller" && !pc.remoteDescription) {
           // Store ice-candidates in an array
-          console.log("iceCandidate", data.iceCandidate, data.to);
-          setIceCandidates((prev: any) => [...prev, data.iceCandidate]);
-        }
-
-        if (data.senderType === "caller" && pc.remoteDescription) {
-          console.log("add ice-candidate on the receiver side");
-
-          let queueIceCandidates = [...iceCandidates];
-
-          queueIceCandidates.forEach((ic) => pc.addIceCandidate(new RTCIceCandidate(ic)));
-
-          pc.addIceCandidate(new RTCIceCandidate(data.iceCandidate));
+          console.log("iceCandidate", "sent by caller", data.iceCandidate);
+          setIceCandidates((prev) => [...prev, data.iceCandidate]);
         }
       }
     });
 
     // Listen for connectionstatechange on the local RTCPeerConnection
-    pc.addEventListener("connectionstatechange", (event) => {
+    pc.addEventListener("connectionstatechange", () => {
       if (pc.connectionState === "connected") {
-        console.log("peers connected");
+        console.log("Peers connected!!");
       }
-    });
-
-    // Listen for connectionstatechange on the local RTCPeerConnection
-    pc.addEventListener("icegatheringstatechange ", (event) => {
-      console.log("icegatheringstatechange", event);
     });
   }, []);
 
@@ -160,34 +166,30 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
     });
 
     // Opens a new event "call-accepted". It is emitted when our call is accepted.
-    socket.on("call-accepted", ({ sdpAnswer, receiverId, displayName }) => {
-      setReceiverDetails({ receiverId, displayName, sdpAnswer });
+    socket.on("call-accepted", (data: ReceiverDetailsType) => {
+      if (data?.receiverId && data?.displayName && data?.sdpAnswer) {
+        const { receiverId, displayName, sdpAnswer } = data;
 
-      // Set the received answer using setRemoteDescription() using setRemoteDescription()
-      if (sdpAnswer) {
         console.log("sdp answer received", sdpAnswer);
+
+        // Set the received answer using setRemoteDescription() using setRemoteDescription()
         pc.setRemoteDescription(new RTCSessionDescription(sdpAnswer));
+        setReceiverDetails({ receiverId, displayName, sdpAnswer });
+
+        // When true it removes the call button
+        setIsCallAccepted(true);
       }
     });
-
-    // socket.on("add-ice-candidate", (data) => {
-    //   if (data.iceCandidate) {
-    //     console.log("caller", "adding ice candidate");
-    //     pc.addIceCandidate(new RTCIceCandidate(data.iceCandidate));
-    //   }
-    // });
   };
 
   const answerCall = async () => {
-    setIsCallAccepted(true);
-
     // The event should be added before setting localDescription
     pc.onicecandidate = (event) => {
       console.log("receiver", event.candidate);
 
       if (event.candidate) {
         socket.emit("new-ice-candidate", {
-          to: callerDetails.callerId,
+          to: callerDetails?.callerId,
           iceCandidate: event.candidate,
           senderType: "receiver",
         });
@@ -197,7 +199,7 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
     };
 
     // Set remote offer (SDP) and set it as remoteDescription using setRemoteDescription()
-    if (callerDetails.sdpOffer) {
+    if (callerDetails?.sdpOffer) {
       console.log("sdp offer received", callerDetails.sdpOffer);
       pc.setRemoteDescription(new RTCSessionDescription(callerDetails.sdpOffer));
 
@@ -217,13 +219,11 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
       sdpAnswer: answer,
       receiverId: mySocketId,
       displayName: userCtx?.displayName,
-      caller: callerDetails.callerId,
+      caller: callerDetails?.callerId,
     });
 
-    // socket.on("add-ice-candidate", (data) => {
-    //   console.log("receiver", "adding ice candidate");
-    //   if (data.iceCandidate) pc.addIceCandidate(new RTCIceCandidate(data.iceCandidate));
-    // });
+    // When true it removes the call button
+    setIsCallAccepted(true);
   };
 
   return (

@@ -3,9 +3,8 @@ import { styled } from "@mui/material/styles";
 import { IconButton } from "@mui/material";
 
 import { StyledMicIcon, StyledMicOffIcon, StyledVideocamIcon, StyledVideocamOffIcon } from "../../../styles/common";
-import { useSocketContext } from "../../../context/SocketContext";
 
-type VideoRef = React.LegacyRef<HTMLVideoElement> | undefined;
+type VideoRef = React.MutableRefObject<HTMLVideoElement | null>;
 
 const useStyles = makeStyles({
   root: { position: "relative" },
@@ -43,13 +42,16 @@ const useStyles = makeStyles({
 const StyledVideoPlayer = styled("video")(({ theme }) => ({
   transform: "rotateY(180deg)",
   margin: "auto",
+  objectFit: "cover",
+  width: "40vw",
+  height: "30vw",
+  background: "#6D6D6D",
 }));
 
 interface VideoPlayerProps {
   videoRef: VideoRef;
-  height?: string;
-  width?: string;
   muted: boolean;
+  isVisible: boolean;
   displayName: string | undefined;
   audioBool: boolean | undefined;
   videoBool: boolean | undefined;
@@ -62,37 +64,36 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   videoRef,
   audioBool,
   videoBool,
-  height,
-  width,
+  isVisible,
   displayName,
   updateMic,
   updateVideo,
 }) => {
   const classes = useStyles();
 
-  // console.log("videoRef", videoRef);
+  return (
+    <div className={classes.root} style={{ display: isVisible ? "block" : "none" }}>
+      <StyledVideoPlayer playsInline muted={muted} ref={videoRef} autoPlay />
 
-  return true ? (
-    <div className={classes.root}>
-      <StyledVideoPlayer width={width ?? "100%"} height={height ?? "auto"} playsInline muted={muted} ref={videoRef} autoPlay />
+      <>
+        {displayName && <div className={classes.displayName}>{displayName}</div>}
 
-      {displayName && <div className={classes.displayName}>{displayName}</div>}
+        <ul className={classes.listsContainer}>
+          <li>
+            <IconButton className={classes.iconButton} onClick={() => (updateMic ? updateMic() : null)}>
+              {audioBool ? <StyledMicIcon /> : <StyledMicOffIcon />}
+            </IconButton>
+          </li>
 
-      <ul className={classes.listsContainer}>
-        <li>
-          <IconButton className={classes.iconButton} onClick={() => (updateMic ? updateMic() : null)}>
-            {audioBool ? <StyledMicIcon /> : <StyledMicOffIcon />}
-          </IconButton>
-        </li>
-
-        <li>
-          <IconButton className={classes.iconButton} onClick={() => (updateVideo ? updateVideo() : null)}>
-            {videoBool ? <StyledVideocamIcon /> : <StyledVideocamOffIcon />}
-          </IconButton>
-        </li>
-      </ul>
+          <li>
+            <IconButton className={classes.iconButton} onClick={() => (updateVideo ? updateVideo() : null)}>
+              {videoBool ? <StyledVideocamIcon /> : <StyledVideocamOffIcon />}
+            </IconButton>
+          </li>
+        </ul>
+      </>
     </div>
-  ) : null;
+  );
 };
 
 export default VideoPlayer;

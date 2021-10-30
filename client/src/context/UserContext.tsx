@@ -11,6 +11,11 @@ const UserCtx = React.createContext<UserContextInterface | null>(null);
 
 export const useUserContext = () => React.useContext(UserCtx);
 
+/*
+  Task -
+  Retrieving displayName, myAudioBool and myVideoBool stored in localStorage.
+*/
+
 const UserContextProvider: React.FC = ({ children }) => {
   const [displayName, setDisplayName] = React.useState("");
 

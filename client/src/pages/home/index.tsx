@@ -2,20 +2,16 @@ import React from "react";
 import { nanoid } from "nanoid";
 import { useHistory } from "react-router-dom";
 
+import { makeStyles } from "@mui/styles";
 import VideoCallIcon from "@mui/icons-material/VideoCall";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import CloseIcon from "@mui/icons-material/Close";
 
-import VideoPlayerOverview from "../../components/video/video-player-overview";
 import CustomTextField from "../../utility-components/CustomTextField";
+import CustomButton from "../../utility-components/CustomButton";
 import { useSocketContext } from "../../context/SocketContext";
 import { setItemToStorage } from "../../utils/localStorage";
-import { ButtonsContainer, StyledForm, useStyles } from "./styles";
+import { StyledForm } from "./styles";
 import { useModalContext } from "../../context/ModalContext";
-import { copyTextToClipboard } from "../../utils/copyTextToClipboard";
 import { useAlertContext } from "../../context/AlertContext";
-
-import CustomButton from "../../utility-components/CustomButton";
 import { useUserContext } from "../../context/UserContext";
 
 const NewMeetingForm: React.FC<{ handleClose(): void }> = ({ handleClose }) => {
@@ -91,7 +87,21 @@ const JoinMeetingForm: React.FC<{ handleClose(): void }> = ({ handleClose }) => 
   );
 };
 
+const useStyles = makeStyles({
+  root: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    height: "100vh",
+
+    "& button:not(:last-child)": {
+      marginRight: "1rem",
+    },
+  },
+});
+
 export default function Home() {
+  const classes = useStyles();
   const modalCtx = useModalContext();
 
   const handleModal = (Component: any) => () => {
@@ -100,7 +110,7 @@ export default function Home() {
   };
 
   return (
-    <div>
+    <div className={classes.root}>
       <CustomButton text="Create Meeting" Icon={VideoCallIcon} IconDirection="left" fn={handleModal(NewMeetingForm)} />
       <CustomButton text="Join Meeting" fn={handleModal(JoinMeetingForm)} />
     </div>

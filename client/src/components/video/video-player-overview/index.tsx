@@ -103,7 +103,6 @@ import { Button } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { nanoid } from "nanoid";
 
-import { useSocketContext } from "../../../context/SocketContext";
 import { useUserContext } from "../../../context/UserContext";
 import { useWebRtcCtx } from "../../../context/WebRTCContext";
 import VideoPlayer from "../video-player";
@@ -117,6 +116,8 @@ const useStyles = makeStyles({
     justifyContent: "center",
 
     "& > div": { margin: "1rem" },
+
+    "@media (max-width: 960px)": { flexDirection: "column" },
   },
 
   name: {
@@ -143,54 +144,60 @@ const useStyles = makeStyles({
 
 const VideoPlayerOverview = () => {
   const classes = useStyles();
-  // const ctx = useSocketContext();
   const userCtx = useUserContext();
   const webRtcCtx = useWebRtcCtx();
-
-  // console.log(ctx?.ctxData.callerDetails?.displayName);
 
   return (
     webRtcCtx && (
       <>
         <div className={classes.videoContainer}>
           {/* Our own video */}
-          {webRtcCtx.localStreamRef && (
-            <VideoPlayer
-              videoRef={webRtcCtx.localStreamRef}
-              displayName={userCtx?.displayName}
-              audioBool={false}
-              videoBool={false}
-              muted={true}
-              // updateMic={ctx.updateMic}
-              // updateVideo={ctx.updateVideo}
-            />
-          )}
+          <VideoPlayer
+            videoRef={webRtcCtx.localStreamRef}
+            displayName={userCtx?.displayName}
+            audioBool={false}
+            videoBool={false}
+            muted={true}
+            isVisible={true}
+            // updateMic={ctx.updateMic}
+            // updateVideo={ctx.updateVideo}
+          />
 
-          {/* Other user's video */}
-          {webRtcCtx.remoteStreamRef && (
-            <VideoPlayer videoRef={webRtcCtx.remoteStreamRef} displayName="John Doe" audioBool={false} videoBool={false} muted={true} />
-          )}
+          {/* 
+            Remote user's video. 
+            Only show when the call is accepted.
+          */}
+          <VideoPlayer
+            videoRef={webRtcCtx.remoteStreamRef}
+            displayName={webRtcCtx.callerDetails?.displayName ?? webRtcCtx.receiverDetails?.displayName}
+            audioBool={false}
+            videoBool={false}
+            isVisible={webRtcCtx.isCallAccepted}
+            muted={true}
+          />
 
           {webRtcCtx.isReceivingCall && !webRtcCtx.isCallAccepted && (
             <div className={classes.joinMeetingContainer}>
-              <p>{webRtcCtx.callerDetails?.displayName} wants to join</p>
-              <Button variant="contained" color="primary" onClick={async () => await webRtcCtx.answerCall()} style={{ marginLeft: "20px" }}>
+              <p>{webRtcCtx.callerDetails?.displayName} is calling</p>
+              <Button variant="contained" color="primary" onClick={() => webRtcCtx.answerCall()} style={{ marginLeft: "20px" }}>
                 Accept
               </Button>
             </div>
           )}
         </div>
 
-        <div style={{ position: "absolute", top: 0, zIndex: 100 }}>
-          {webRtcCtx.myRoom.map(
-            (id: any) =>
-              id !== webRtcCtx.mySocketId && (
-                <button key={nanoid()} onClick={async () => await webRtcCtx.makeCall(id)}>
-                  Call {id}
-                </button>
-              )
-          )}
-        </div>
+        {!webRtcCtx.isCallAccepted && (
+          <div style={{ position: "absolute", top: 0, zIndex: 100 }}>
+            {webRtcCtx.myRoom.map(
+              (id: any) =>
+                id !== webRtcCtx.mySocketId && (
+                  <button key={nanoid()} onClick={() => webRtcCtx.makeCall(id)}>
+                    Call {id}
+                  </button>
+                )
+            )}
+          </div>
+        )}
       </>
     )
   );

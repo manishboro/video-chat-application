@@ -5,7 +5,6 @@ import { BrowserRouter as Router } from "react-router-dom";
 
 import { ThemeProvider } from "@mui/material/styles";
 
-import SocketContextProvider from "./context/SocketContext";
 import AlertContextProvider from "./context/AlertContext";
 import App from "./App";
 import theme from "./styles/theme";
@@ -20,11 +19,9 @@ ReactDOM.render(
       <Router>
         <AlertContextProvider>
           <UserContextProvider>
-            {/* <SocketContextProvider> */}
             <ModalContextProvider>
               <App />
             </ModalContextProvider>
-            {/* </SocketContextProvider> */}
           </UserContextProvider>
         </AlertContextProvider>
       </Router>

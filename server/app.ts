@@ -4,6 +4,10 @@ import path from "path";
 import { createServer } from "http";
 import { Server, Socket } from "socket.io";
 
+type CallingUserType = { userToCall: string; sdpOffer: RTCSessionDescriptionInit; callerId: string; displayName: string };
+type ReceivingUserType = { caller: string; sdpAnswer: RTCSessionDescriptionInit; receiverId: string; displayName: string };
+type AddIceCandidateType = { iceCandidate: RTCIceCandidate; to: string; senderType: string };
+
 const app = express();
 export const httpServer = createServer(app);
 
@@ -17,34 +21,11 @@ app.use(express.static(path.resolve(__dirname, "../../client/build")));
 
 app.get("/api", (req: Request, res: Response) => res.send("<h1>API server is running!!</h1>"));
 
-app.get("*", (req, res) => {
+app.get("*", (req: Request, res: Response) => {
   res.sendFile(path.resolve(__dirname, "../../client/build", "index.html"));
 });
 
 io.on("connection", (socket: Socket) => {
-  // Send my information to the user whom we are calling
-  socket.on("callUser", ({ userToCall, signalData, from, displayName }) =>
-    io.to(userToCall).emit("listenForCall", {
-      signal: signalData,
-      from,
-      displayName,
-    })
-  );
-
-  // socket.on("answerCall", (data) => io.to(data.to).emit("callAccepted", data.signal));
-
-  socket.on("answerCall", ({ caller, receiverId, signalData, displayName }) =>
-    io.to(caller).emit("callAccepted", {
-      signal: signalData,
-      receiverId,
-      displayName,
-    })
-  );
-
-  socket.on("updateMyMedia", ({ type, currentMediaStatus }) => socket.broadcast.emit("updateUserMedia", { type, currentMediaStatus }));
-
-  socket.on("disconnect", () => socket.broadcast.emit("callEnded"));
-
   /*****************************************************************/
   // Sends the socket ID of the connected user to the client
   socket.emit("mySocketId", socket.id);
@@ -67,9 +48,7 @@ io.on("connection", (socket: Socket) => {
   });
 
   // Sending my information to the user whom we are calling
-  socket.on("call-user", ({ userToCall, sdpOffer, callerId, displayName }) => {
-    console.log("user to call", userToCall);
-
+  socket.on("call-user", ({ userToCall, sdpOffer, callerId, displayName }: CallingUserType) => {
     io.to(userToCall).emit("listen-for-call", {
       sdpOffer,
       callerId,
@@ -78,7 +57,7 @@ io.on("connection", (socket: Socket) => {
   });
 
   // Sending back my information to the user who is calling us
-  socket.on("answer-call", ({ caller, receiverId, sdpAnswer, displayName }) =>
+  socket.on("answer-call", ({ caller, receiverId, sdpAnswer, displayName }: ReceivingUserType) =>
     io.to(caller).emit("call-accepted", {
       sdpAnswer,
       receiverId,
@@ -86,10 +65,12 @@ io.on("connection", (socket: Socket) => {
     })
   );
 
-  socket.on("new-ice-candidate", (data) => {
-    if (data.iceCandidate && data.to) {
-      console.log("user to send ice candidate", data.to);
-      io.to(data.to).emit("add-ice-candidate", data);
-    }
+  // Listens for new ice candidate and if found send to the other user/peer
+  socket.on("new-ice-candidate", (data: AddIceCandidateType) => {
+    if (data.iceCandidate && data.to) io.to(data.to).emit("add-ice-candidate", data);
   });
+
+  socket.on("updateMyMedia", ({ type, currentMediaStatus }) => socket.broadcast.emit("updateUserMedia", { type, currentMediaStatus }));
+
+  socket.on("disconnect", () => socket.broadcast.emit("callEnded"));
 });
