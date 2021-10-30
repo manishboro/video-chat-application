@@ -22,26 +22,7 @@ app.get("*", (req, res) => {
 });
 
 io.on("connection", (socket: Socket) => {
-  // Sends the socket ID of the connected user to the client
-  socket.emit("mySocketId", socket.id);
-
-  socket.on("join-room", (roomName: string) => {
-    // Join a room
-    socket.join(roomName);
-
-    // Get all sockets connected to different rooms
-    const allRooms = io.of(`/`).adapter.rooms;
-
-    // Get sockets connected to a particular room
-    let myRoom = allRooms.get(roomName);
-
-    console.log(myRoom);
-
-    // Sending room details to all the connected client even to myself
-    io.to(roomName).emit("user-connected", { roomId: roomName, myRoom: Array.from(myRoom ?? []) }); // Converting myRoom Set to an Array
-  });
-
-  // Send my information to the person whom we are calling
+  // Send my information to the user whom we are calling
   socket.on("callUser", ({ userToCall, signalData, from, displayName }) =>
     io.to(userToCall).emit("listenForCall", {
       signal: signalData,
@@ -63,4 +44,52 @@ io.on("connection", (socket: Socket) => {
   socket.on("updateMyMedia", ({ type, currentMediaStatus }) => socket.broadcast.emit("updateUserMedia", { type, currentMediaStatus }));
 
   socket.on("disconnect", () => socket.broadcast.emit("callEnded"));
+
+  /*****************************************************************/
+  // Sends the socket ID of the connected user to the client
+  socket.emit("mySocketId", socket.id);
+
+  socket.on("join-room", (roomName: string) => {
+    // Join a room
+    socket.join(roomName);
+
+    // Get all sockets connected to different rooms
+    const allRooms = io.of(`/`).adapter.rooms;
+
+    // Get sockets connected to a particular room
+    let myRoom = allRooms.get(roomName);
+
+    // Sending room details to all the connected client even to myself
+    io.to(roomName).emit("user-connected", {
+      roomId: roomName,
+      myRoom: Array.from(myRoom ?? []), // Converting myRoom Set to an Array
+    });
+  });
+
+  // Sending my information to the user whom we are calling
+  socket.on("call-user", ({ userToCall, sdpOffer, callerId, displayName }) => {
+    console.log("user to call", userToCall);
+
+    io.to(userToCall).emit("listen-for-call", {
+      sdpOffer,
+      callerId,
+      displayName,
+    });
+  });
+
+  // Sending back my information to the user who is calling us
+  socket.on("answer-call", ({ caller, receiverId, sdpAnswer, displayName }) =>
+    io.to(caller).emit("call-accepted", {
+      sdpAnswer,
+      receiverId,
+      displayName,
+    })
+  );
+
+  socket.on("new-ice-candidate", (data) => {
+    if (data.iceCandidate && data.to) {
+      console.log("user to send ice candidate", data.to);
+      io.to(data.to).emit("add-ice-candidate", data);
+    }
+  });
 });

@@ -47,16 +47,18 @@ const StyledVideoPlayer = styled("video")(({ theme }) => ({
 
 interface VideoPlayerProps {
   videoRef: VideoRef;
+  height?: string;
+  width?: string;
+  muted: boolean;
+  displayName: string | undefined;
   audioBool: boolean | undefined;
   videoBool: boolean | undefined;
   updateMic?: () => void;
   updateVideo?: () => void;
-  displayName: string | undefined;
-  height?: string;
-  width?: string;
 }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
+  muted,
   videoRef,
   audioBool,
   videoBool,
@@ -68,9 +70,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 }) => {
   const classes = useStyles();
 
-  return (
+  // console.log("videoRef", videoRef);
+
+  return true ? (
     <div className={classes.root}>
-      <StyledVideoPlayer width={width ?? "100%"} height={height ?? "auto"} playsInline muted ref={videoRef} autoPlay />
+      <StyledVideoPlayer width={width ?? "100%"} height={height ?? "auto"} playsInline muted={muted} ref={videoRef} autoPlay />
 
       {displayName && <div className={classes.displayName}>{displayName}</div>}
 
@@ -88,7 +92,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         </li>
       </ul>
     </div>
-  );
+  ) : null;
 };
 
 export default VideoPlayer;

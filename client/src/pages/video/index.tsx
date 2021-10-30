@@ -14,6 +14,7 @@ import { ButtonsContainer, StyledForm, useStyles } from "./styles";
 import { useModalContext } from "../../context/ModalContext";
 import { copyTextToClipboard } from "../../utils/copyTextToClipboard";
 import { useAlertContext } from "../../context/AlertContext";
+import WebRTCContextProvider from "../../context/WebRTCContext";
 
 // const NewMeetingForm: React.FC<{ handleClose(): void }> = ({ handleClose }) => {
 //   const ctx = useSocketContext();
@@ -113,22 +114,25 @@ const VideoPage = () => {
   console.log("hello", ctx?.ctxData.myRoom);
 
   return (
-    <SocketContextProvider>
+    // <SocketContextProvider>
+    <WebRTCContextProvider>
       <div className={classes.root}>
         <VideoPlayerOverview />
 
         {/* {ctx && !ctx.ctxData.callAccepted ? (
-      <ButtonsContainer>
-        <CustomButton text="Create Meeting" Icon={VideoCallIcon} IconDirection="left" fn={handleModal(NewMeetingForm)} />
-        <CustomButton text="Join Meeting" fn={handleModal(JoinMeetingForm)} />
-      </ButtonsContainer>
-    ) : (
-      <ButtonsContainer>
-        <CustomButton text="Leave Meeting" color="secondary" Icon={CloseIcon} fn={ctx?.leaveCall} />
-      </ButtonsContainer>
-    )} */}
+    <ButtonsContainer>
+      <CustomButton text="Create Meeting" Icon={VideoCallIcon} IconDirection="left" fn={handleModal(NewMeetingForm)} />
+      <CustomButton text="Join Meeting" fn={handleModal(JoinMeetingForm)} />
+    </ButtonsContainer>
+  ) : (
+    <ButtonsContainer>
+      <CustomButton text="Leave Meeting" color="secondary" Icon={CloseIcon} fn={ctx?.leaveCall} />
+    </ButtonsContainer>
+  )} */}
       </div>
-    </SocketContextProvider>
+    </WebRTCContextProvider>
+
+    // </SocketContextProvider>
   );
 };
 

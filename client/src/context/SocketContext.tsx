@@ -170,7 +170,7 @@ const SocketContextProvider: React.FC = ({ children }) => {
 
     const peer = new Peer({
       initiator: false,
-      trickle: false,
+      trickle: true,
       stream: ctxData.myStream,
     });
 
@@ -194,7 +194,7 @@ const SocketContextProvider: React.FC = ({ children }) => {
   const callUser = (id: string) => {
     const peer = new Peer({
       initiator: true,
-      trickle: false,
+      trickle: true,
       stream: ctxData.myStream,
     });
 
