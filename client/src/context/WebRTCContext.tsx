@@ -33,14 +33,13 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
 
   const [callerDetails, setCallerDetails] = React.useState<any>();
   const [receiverDetails, setReceiverDetails] = React.useState<any>();
+  const [iceCandidates, setIceCandidates] = React.useState<any>();
 
   const [isReceivingCall, setIsReceivingCall] = React.useState(false);
   const [isCallAccepted, setIsCallAccepted] = React.useState(false);
 
   const [localUserDetails, setLocalUserDetails] = React.useState<any>();
   const [remoteUserDetails, setRemoteUserDetails] = React.useState<any>();
-
-  console.log(mySocketId);
 
   React.useEffect(() => {
     const getUserMedia = async () => {
@@ -86,8 +85,14 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
       // Set received offer using setRemoteDescription()
       setCallerDetails({ callerId, displayName, sdpOffer });
       setIsReceivingCall(true);
+    });
 
-      // if (sdpOffer) pc.setRemoteDescription(new RTCSessionDescription(sdpOffer));
+    // Set ICE candidate
+    socket.on("add-ice-candidate", (data) => {
+      if (data.iceCandidate) {
+        console.log("iceCandidate", data.iceCandidate, data.to);
+        pc.addIceCandidate(new RTCIceCandidate(data.iceCandidate));
+      }
     });
 
     // Listen for connectionstatechange on the local RTCPeerConnection
@@ -99,7 +104,7 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
 
     // Listen for connectionstatechange on the local RTCPeerConnection
     pc.addEventListener("icegatheringstatechange ", (event) => {
-      console.log(event);
+      console.log("icegatheringstatechange", event);
     });
   }, []);
 
@@ -132,7 +137,7 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
     // Opens a new event "call-accepted". It is emitted when our call is accepted
     socket.on("call-accepted", ({ sdpAnswer, receiverId, displayName }) => {
       // Set the received answer using setRemoteDescription()
-      if (sdpAnswer && !pc.currentRemoteDescription) {
+      if (sdpAnswer) {
         console.log("sdp answer received", sdpAnswer);
         pc.setRemoteDescription(new RTCSessionDescription(sdpAnswer));
       }
@@ -140,9 +145,12 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
       setReceiverDetails({ receiverId, displayName, sdpAnswer });
     });
 
-    socket.on("add-ice-candidate", (data) => {
-      if (data.iceCandidate) pc.addIceCandidate(new RTCIceCandidate(data.iceCandidate));
-    });
+    // socket.on("add-ice-candidate", (data) => {
+    //   if (data.iceCandidate) {
+    //     console.log("caller", "adding ice candidate");
+    //     pc.addIceCandidate(new RTCIceCandidate(data.iceCandidate));
+    //   }
+    // });
   };
 
   const answerCall = async () => {
@@ -179,9 +187,10 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
       caller: callerDetails.callerId,
     });
 
-    socket.on("add-ice-candidate", (data) => {
-      if (data.iceCandidate) pc.addIceCandidate(new RTCIceCandidate(data.iceCandidate));
-    });
+    // socket.on("add-ice-candidate", (data) => {
+    //   console.log("receiver", "adding ice candidate");
+    //   if (data.iceCandidate) pc.addIceCandidate(new RTCIceCandidate(data.iceCandidate));
+    // });
   };
 
   return (

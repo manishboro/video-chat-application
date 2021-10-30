@@ -111,8 +111,6 @@ const VideoPage = () => {
   //   modalCtx?.setComponent(<Component handleClose={modalCtx.handleClose} />);
   // };
 
-  console.log("hello", ctx?.ctxData.myRoom);
-
   return (
     // <SocketContextProvider>
     <WebRTCContextProvider>
