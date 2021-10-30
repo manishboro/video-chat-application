@@ -89,7 +89,11 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
 
     // Set ICE candidate
     socket.on("add-ice-candidate", (data) => {
-      // **Ice candidates cannot be added without setting remote description
+      /* 
+        Ice candidates cannot be added without setting remote description.
+        For the caller side, we only receive ice candidates after local description relative to the receiver has been set.
+        By that time, on the caller side remote description has already been set. 
+      */
       if (data.iceCandidate) {
         if (data.senderType === "receiver") {
           console.log("add ice-candidate on the caller side");
@@ -155,7 +159,7 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
       displayName: userCtx?.displayName,
     });
 
-    // Opens a new event "call-accepted". It is emitted when our call is accepted
+    // Opens a new event "call-accepted". It is emitted when our call is accepted.
     socket.on("call-accepted", ({ sdpAnswer, receiverId, displayName }) => {
       setReceiverDetails({ receiverId, displayName, sdpAnswer });
 

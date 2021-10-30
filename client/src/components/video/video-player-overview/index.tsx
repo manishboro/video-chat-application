@@ -168,7 +168,7 @@ const VideoPlayerOverview = () => {
 
           {/* Other user's video */}
           {webRtcCtx.remoteStreamRef && (
-            <VideoPlayer videoRef={webRtcCtx.remoteStreamRef} displayName="John Doe" audioBool={false} videoBool={false} muted={false} />
+            <VideoPlayer videoRef={webRtcCtx.remoteStreamRef} displayName="John Doe" audioBool={false} videoBool={false} muted={true} />
           )}
 
           {webRtcCtx.isReceivingCall && !webRtcCtx.isCallAccepted && (
