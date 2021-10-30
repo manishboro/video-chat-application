@@ -33,7 +33,7 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
 
   const [callerDetails, setCallerDetails] = React.useState<any>();
   const [receiverDetails, setReceiverDetails] = React.useState<any>();
-  const [iceCandidates, setIceCandidates] = React.useState<any>();
+  const [iceCandidates, setIceCandidates] = React.useState<any>([]);
 
   const [isReceivingCall, setIsReceivingCall] = React.useState(false);
   const [isCallAccepted, setIsCallAccepted] = React.useState(false);
@@ -89,9 +89,28 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
 
     // Set ICE candidate
     socket.on("add-ice-candidate", (data) => {
+      // **Ice candidates cannot be added without setting remote description
       if (data.iceCandidate) {
-        console.log("iceCandidate", data.iceCandidate, data.to);
-        pc.addIceCandidate(new RTCIceCandidate(data.iceCandidate));
+        if (data.senderType === "receiver") {
+          console.log("add ice-candidate on the caller side");
+          return pc.addIceCandidate(new RTCIceCandidate(data.iceCandidate));
+        }
+
+        if (data.senderType === "caller" && !pc.remoteDescription) {
+          // Store ice-candidates in an array
+          console.log("iceCandidate", data.iceCandidate, data.to);
+          setIceCandidates((prev: any) => [...prev, data.iceCandidate]);
+        }
+
+        if (data.senderType === "caller" && pc.remoteDescription) {
+          console.log("add ice-candidate on the receiver side");
+
+          let queueIceCandidates = [...iceCandidates];
+
+          queueIceCandidates.forEach((ic) => pc.addIceCandidate(new RTCIceCandidate(ic)));
+
+          pc.addIceCandidate(new RTCIceCandidate(data.iceCandidate));
+        }
       }
     });
 
@@ -109,6 +128,7 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
   }, []);
 
   const makeCall = async (userToCallSocketId: string) => {
+    // The event should be added before setting localDescription
     pc.onicecandidate = (event) => {
       console.log("caller", event.candidate);
 
@@ -116,13 +136,14 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
         socket.emit("new-ice-candidate", {
           to: userToCallSocketId,
           iceCandidate: event.candidate,
+          senderType: "caller",
         });
       } else {
         console.log("All ICE candidates from caller side has been sent!");
       }
     };
 
-    // Crate offer (SDP) and set it as localDescription
+    // Crate offer (SDP) and set it as localDescription using setLocalDescription()
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
 
@@ -136,13 +157,13 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
 
     // Opens a new event "call-accepted". It is emitted when our call is accepted
     socket.on("call-accepted", ({ sdpAnswer, receiverId, displayName }) => {
-      // Set the received answer using setRemoteDescription()
+      setReceiverDetails({ receiverId, displayName, sdpAnswer });
+
+      // Set the received answer using setRemoteDescription() using setRemoteDescription()
       if (sdpAnswer) {
         console.log("sdp answer received", sdpAnswer);
         pc.setRemoteDescription(new RTCSessionDescription(sdpAnswer));
       }
-
-      setReceiverDetails({ receiverId, displayName, sdpAnswer });
     });
 
     // socket.on("add-ice-candidate", (data) => {
@@ -156,6 +177,7 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
   const answerCall = async () => {
     setIsCallAccepted(true);
 
+    // The event should be added before setting localDescription
     pc.onicecandidate = (event) => {
       console.log("receiver", event.candidate);
 
@@ -163,19 +185,20 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
         socket.emit("new-ice-candidate", {
           to: callerDetails.callerId,
           iceCandidate: event.candidate,
+          senderType: "receiver",
         });
       } else {
         console.log("All ICE candidates from receiver side has been sent!");
       }
     };
 
+    // Set remote offer (SDP) and set it as remoteDescription using setRemoteDescription()
     if (callerDetails.sdpOffer) {
       console.log("sdp offer received", callerDetails.sdpOffer);
-
       pc.setRemoteDescription(new RTCSessionDescription(callerDetails.sdpOffer));
     }
 
-    // Create answer (SDP) and set it as localDescription
+    // Create answer (SDP) and set it as localDescription using setLocalDescription()
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
 
