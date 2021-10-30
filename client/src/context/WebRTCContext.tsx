@@ -196,6 +196,12 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
     if (callerDetails.sdpOffer) {
       console.log("sdp offer received", callerDetails.sdpOffer);
       pc.setRemoteDescription(new RTCSessionDescription(callerDetails.sdpOffer));
+
+      let queueIceCandidates = [...iceCandidates];
+      queueIceCandidates.forEach((ic) => {
+        console.log("add ice-candidate on the receiver side");
+        pc.addIceCandidate(new RTCIceCandidate(ic));
+      });
     }
 
     // Create answer (SDP) and set it as localDescription using setLocalDescription()
