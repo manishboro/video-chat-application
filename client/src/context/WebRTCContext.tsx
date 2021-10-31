@@ -117,14 +117,17 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
       if (data.iceCandidate) {
         if (data.senderType === "receiver") {
           console.log("add ice-candidate on the caller side");
-          console.log("iceCandidate", "sent by receiver", data.iceCandidate);
-          return pc.addIceCandidate(new RTCIceCandidate(data.iceCandidate));
+          // console.log("iceCandidate", "sent by receiver", data.iceCandidate);
+          setIceCandidates((prev) => [...prev, data.iceCandidate]);
+          return;
+          // return pc.addIceCandidate(new RTCIceCandidate(data.iceCandidate));
         }
 
         if (data.senderType === "caller" && !pc.remoteDescription) {
           // Store ice-candidates in an array
           console.log("iceCandidate", "sent by caller", data.iceCandidate);
           setIceCandidates((prev) => [...prev, data.iceCandidate]);
+          return;
         }
       }
     });
@@ -178,6 +181,13 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
 
         // When true it removes the call button
         setIsCallAccepted(true);
+
+        let queueIceCandidates = [...iceCandidates];
+
+        queueIceCandidates.forEach((ic) => {
+          console.log("add ice-candidate on the caller side");
+          pc.addIceCandidate(new RTCIceCandidate(ic));
+        });
       }
     });
   };
@@ -204,6 +214,7 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
       pc.setRemoteDescription(new RTCSessionDescription(callerDetails.sdpOffer));
 
       let queueIceCandidates = [...iceCandidates];
+
       queueIceCandidates.forEach((ic) => {
         console.log("add ice-candidate on the receiver side");
         pc.addIceCandidate(new RTCIceCandidate(ic));
