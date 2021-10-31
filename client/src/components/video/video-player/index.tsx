@@ -120,7 +120,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 }) => {
   const classes = useStyles();
 
-  console.log(isVisible && videoRef.current && videoRef.current.srcObject);
+  // console.log(isVisible && videoRef.current && videoRef.current.srcObject);
 
   return (
     <div className={classes.root} style={{ display: isVisible ? "block" : "none" }}>
