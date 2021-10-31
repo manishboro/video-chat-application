@@ -105,17 +105,34 @@ import { nanoid } from "nanoid";
 
 import { useUserContext } from "../../../context/UserContext";
 import { useWebRtcCtx } from "../../../context/WebRTCContext";
-import VideoPlayer from "../video-player";
+import VideoPlayer, { MicAndVideo } from "../video-player";
 
 const useStyles = makeStyles({
-  videoContainer: {
+  root: {
     width: "100%",
-    height: "100%",
+    height: "100vh",
+  },
+
+  root_1: {
+    width: "100%",
+    height: "calc(100vh - 80px)",
+    display: "flex",
+  },
+
+  root_2: {
+    width: "100%",
+    height: "80px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+  },
 
-    "& > div": { margin: "1rem" },
+  videoContainer: {
+    width: "100%",
+    height: "calc(100vh - 80px)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-evenly",
 
     "@media (max-width: 960px)": { flexDirection: "column" },
   },
@@ -140,6 +157,12 @@ const useStyles = makeStyles({
     borderRadius: "5px",
     fontFamily: "Montserrat",
   },
+
+  sidebar: {
+    width: "300px",
+    height: "100%",
+    backgroundColor: "white",
+  },
 });
 
 const VideoPlayerOverview = () => {
@@ -147,16 +170,15 @@ const VideoPlayerOverview = () => {
   const userCtx = useUserContext();
   const webRtcCtx = useWebRtcCtx();
 
-  return (
-    webRtcCtx && (
-      <>
+  return webRtcCtx ? (
+    <div className={classes.root}>
+      <div className={classes.root_1}>
         <div className={classes.videoContainer}>
           {/* Our own video */}
           <VideoPlayer
             videoRef={webRtcCtx.localStreamRef}
             displayName={userCtx?.displayName}
-            audioBool={false}
-            videoBool={false}
+            showMicAndVideo={false}
             muted={true}
             isVisible={true}
             // updateMic={ctx.updateMic}
@@ -172,8 +194,10 @@ const VideoPlayerOverview = () => {
             displayName={webRtcCtx.callerDetails?.displayName ?? webRtcCtx.receiverDetails?.displayName}
             audioBool={false}
             videoBool={false}
+            showMicAndVideo={true}
+            disableMicAndVideoBtn={true}
             isVisible={webRtcCtx.isCallAccepted}
-            muted={true}
+            muted={false}
           />
 
           {webRtcCtx.isReceivingCall && !webRtcCtx.isCallAccepted && (
@@ -184,23 +208,29 @@ const VideoPlayerOverview = () => {
               </Button>
             </div>
           )}
+
+          {!webRtcCtx.isCallAccepted && (
+            <div style={{ position: "absolute", top: 0, zIndex: 100 }}>
+              {webRtcCtx.myRoom.map(
+                (id: any) =>
+                  id !== webRtcCtx.mySocketId && (
+                    <button key={nanoid()} onClick={() => webRtcCtx.makeCall(id)}>
+                      Call {id}
+                    </button>
+                  )
+              )}
+            </div>
+          )}
         </div>
 
-        {!webRtcCtx.isCallAccepted && (
-          <div style={{ position: "absolute", top: 0, zIndex: 100 }}>
-            {webRtcCtx.myRoom.map(
-              (id: any) =>
-                id !== webRtcCtx.mySocketId && (
-                  <button key={nanoid()} onClick={() => webRtcCtx.makeCall(id)}>
-                    Call {id}
-                  </button>
-                )
-            )}
-          </div>
-        )}
-      </>
-    )
-  );
+        {/* <div className={classes.sidebar}></div> */}
+      </div>
+
+      <div className={classes.root_2}>
+        <MicAndVideo audioBool={true} videoBool={true} />
+      </div>
+    </div>
+  ) : null;
 };
 
 export default VideoPlayerOverview;

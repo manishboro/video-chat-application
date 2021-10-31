@@ -19,20 +19,22 @@ const useStyles = makeStyles({
     fontFamily: "Montserrat",
   },
 
-  listsContainer: {
+  listsContainerRoot: {
     position: "absolute",
-    bottom: "1.5rem",
+    bottom: "1rem",
     zIndex: 1,
-    listStyle: "none",
-    display: "flex",
     left: "50%",
     transform: "translateX(-50%)",
+  },
 
-    "& > li:not(:last-child)": { marginRight: "1rem" },
+  listsContainer: {
+    listStyle: "none",
+    display: "flex",
+
+    "& > li:not(:last-child)": { marginRight: "10px" },
   },
 
   iconButton: {
-    backgroundColor: "rgba(0, 0, 0, .7)",
     border: "1px solid white",
 
     "&:hover": { backgroundColor: "rgba(0, 0, 0, .7)" },
@@ -41,29 +43,76 @@ const useStyles = makeStyles({
 
 const StyledVideoPlayer = styled("video")(({ theme }) => ({
   transform: "rotateY(180deg)",
-  margin: "auto",
   objectFit: "cover",
-  width: "40vw",
+  objectPosition: "center",
+  width: "45vw",
   height: "30vw",
   background: "#6D6D6D",
+
+  "@media (max-width: 960px)": {
+    width: "90vw",
+    height: "auto",
+  },
 }));
 
 interface VideoPlayerProps {
   videoRef: VideoRef;
-  muted: boolean;
-  isVisible: boolean;
   displayName: string | undefined;
-  audioBool: boolean | undefined;
-  videoBool: boolean | undefined;
+  isVisible: boolean;
+  muted: boolean;
+  showMicAndVideo?: boolean;
+  disableMicAndVideoBtn?: boolean;
+  audioBool?: boolean | undefined;
+  videoBool?: boolean | undefined;
   updateMic?: () => void;
   updateVideo?: () => void;
 }
+
+interface MicAndVideoProps {
+  audioBool: boolean | undefined;
+  videoBool: boolean | undefined;
+  disableMicAndVideoBtn?: boolean;
+  updateMic?: () => void;
+  updateVideo?: () => void;
+}
+
+export const MicAndVideo = ({ updateMic, updateVideo, disableMicAndVideoBtn, audioBool = false, videoBool = false }: MicAndVideoProps) => {
+  const classes = useStyles();
+
+  return (
+    <ul className={classes.listsContainer}>
+      <li>
+        <IconButton
+          className={classes.iconButton}
+          disabled={disableMicAndVideoBtn}
+          style={{ backgroundColor: audioBool ? "rgba(0, 0, 0, .7)" : "red" }}
+          onClick={() => (updateMic ? updateMic() : null)}
+        >
+          {audioBool ? <StyledMicIcon /> : <StyledMicOffIcon />}
+        </IconButton>
+      </li>
+
+      <li>
+        <IconButton
+          className={classes.iconButton}
+          disabled={disableMicAndVideoBtn}
+          style={{ backgroundColor: audioBool ? "rgba(0, 0, 0, .7)" : "red" }}
+          onClick={() => (updateVideo ? updateVideo() : null)}
+        >
+          {videoBool ? <StyledVideocamIcon /> : <StyledVideocamOffIcon />}
+        </IconButton>
+      </li>
+    </ul>
+  );
+};
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
   muted,
   videoRef,
   audioBool,
   videoBool,
+  showMicAndVideo,
+  disableMicAndVideoBtn = false,
   isVisible,
   displayName,
   updateMic,
@@ -71,27 +120,25 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 }) => {
   const classes = useStyles();
 
+  console.log(isVisible && videoRef.current && videoRef.current.srcObject);
+
   return (
     <div className={classes.root} style={{ display: isVisible ? "block" : "none" }}>
       <StyledVideoPlayer playsInline muted={muted} ref={videoRef} autoPlay />
 
-      <>
-        {displayName && <div className={classes.displayName}>{displayName}</div>}
+      {displayName && <div className={classes.displayName}>{displayName}</div>}
 
-        <ul className={classes.listsContainer}>
-          <li>
-            <IconButton className={classes.iconButton} onClick={() => (updateMic ? updateMic() : null)}>
-              {audioBool ? <StyledMicIcon /> : <StyledMicOffIcon />}
-            </IconButton>
-          </li>
-
-          <li>
-            <IconButton className={classes.iconButton} onClick={() => (updateVideo ? updateVideo() : null)}>
-              {videoBool ? <StyledVideocamIcon /> : <StyledVideocamOffIcon />}
-            </IconButton>
-          </li>
-        </ul>
-      </>
+      {showMicAndVideo && (
+        <div className={classes.listsContainerRoot}>
+          <MicAndVideo
+            audioBool={audioBool}
+            videoBool={videoBool}
+            disableMicAndVideoBtn={disableMicAndVideoBtn}
+            updateMic={updateMic}
+            updateVideo={updateVideo}
+          />
+        </div>
+      )}
     </div>
   );
 };

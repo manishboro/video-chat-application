@@ -76,7 +76,7 @@ const JoinMeetingForm: React.FC<{ handleClose(): void }> = ({ handleClose }) => 
 
       <CustomTextField
         id="personToCall"
-        label="Enter Room ID"
+        label="Enter a code or link"
         value={idToCall}
         handleChange={(e) => setIDToCall(e.target.value)}
         labelWidth={100}
