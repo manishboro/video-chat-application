@@ -110,9 +110,8 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
     // Set ICE candidate
     socket.on("add-ice-candidate", (data: AddIceCandidateType) => {
       /* 
-        Ice candidates cannot be added without setting remote description.
-        For the caller side, we only receive ice candidates after local description relative to the receiver has been set.
-        By that time, on the caller side remote description has already been set. So we can set the ice-candidates for the caller directly on the event listener itself.
+        Ice candidates are generated after setting localDescription.
+        And it has to be set on the other side after setting remoteDescription.
       */
       if (data.iceCandidate) {
         if (data.senderType === "receiver") {
@@ -143,7 +142,7 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
   const makeCall = async (userToCallSocketId: string) => {
     // The event should be added before setting localDescription
     pc.onicecandidate = (event) => {
-      console.log("caller", event.candidate);
+      console.log("caller iceCandidate", event.candidate);
 
       if (event.candidate) {
         socket.emit("new-ice-candidate", {
@@ -170,7 +169,7 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
 
     // Opens a new event "call-accepted". It is emitted when our call is accepted.
     socket.on("call-accepted", (data: ReceiverDetailsType) => {
-      if (data?.receiverId && data?.displayName && data?.sdpAnswer) {
+      if (data?.receiverId && data?.displayName && data?.sdpAnswer && !pc.currentRemoteDescription) {
         const { receiverId, displayName, sdpAnswer } = data;
 
         console.log("sdp answer received", sdpAnswer);
@@ -195,7 +194,7 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
   const answerCall = async () => {
     // The event should be added before setting localDescription
     pc.onicecandidate = (event) => {
-      console.log("receiver", event.candidate);
+      console.log("receiver iceCandidate", event.candidate);
 
       if (event.candidate) {
         socket.emit("new-ice-candidate", {
@@ -209,7 +208,7 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
     };
 
     // Set remote offer (SDP) and set it as remoteDescription using setRemoteDescription()
-    if (callerDetails?.sdpOffer) {
+    if (callerDetails?.sdpOffer && !pc.currentRemoteDescription) {
       console.log("sdp offer received", callerDetails.sdpOffer);
       pc.setRemoteDescription(new RTCSessionDescription(callerDetails.sdpOffer));
 
