@@ -12,6 +12,7 @@ import theme from "./styles/theme";
 import reportWebVitals from "./reportWebVitals";
 import ModalContextProvider from "./context/ModalContext";
 import UserContextProvider from "./context/UserContext";
+import { CssBaseline } from "@mui/material";
 
 ReactDOM.render(
   <React.StrictMode>
@@ -20,6 +21,7 @@ ReactDOM.render(
         <AlertContextProvider>
           <UserContextProvider>
             <ModalContextProvider>
+              <CssBaseline />
               <App />
             </ModalContextProvider>
           </UserContextProvider>

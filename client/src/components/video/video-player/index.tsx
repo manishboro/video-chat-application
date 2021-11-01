@@ -85,7 +85,7 @@ export const MicAndVideo = ({ updateMic, updateVideo, disableMicAndVideoBtn, aud
         <IconButton
           className={classes.iconButton}
           disabled={disableMicAndVideoBtn}
-          style={{ backgroundColor: audioBool ? "rgba(0, 0, 0, .7)" : "red" }}
+          style={{ backgroundColor: audioBool || disableMicAndVideoBtn ? "rgba(0, 0, 0, .7)" : "red" }}
           onClick={() => (updateMic ? updateMic() : null)}
         >
           {audioBool ? <StyledMicIcon /> : <StyledMicOffIcon />}
@@ -96,7 +96,7 @@ export const MicAndVideo = ({ updateMic, updateVideo, disableMicAndVideoBtn, aud
         <IconButton
           className={classes.iconButton}
           disabled={disableMicAndVideoBtn}
-          style={{ backgroundColor: audioBool ? "rgba(0, 0, 0, .7)" : "red" }}
+          style={{ backgroundColor: audioBool || disableMicAndVideoBtn ? "rgba(0, 0, 0, .7)" : "red" }}
           onClick={() => (updateVideo ? updateVideo() : null)}
         >
           {videoBool ? <StyledVideocamIcon /> : <StyledVideocamOffIcon />}

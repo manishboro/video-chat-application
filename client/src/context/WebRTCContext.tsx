@@ -26,7 +26,7 @@ export type ReceiverDetailsType = { receiverId: string; displayName: string; sdp
 const socket = io(process.env.REACT_APP_IO_URI ?? "/");
 
 let configuration = {
-  iceServers: [{ urls: ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"] }],
+  iceServers: [{ urls: ["stun:stun.mavoix.co.in:3478"] }],
   iceCandidatePoolSize: 10,
 };
 
