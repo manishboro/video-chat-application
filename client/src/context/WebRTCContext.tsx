@@ -28,10 +28,10 @@ const socket = io(process.env.REACT_APP_IO_URI ?? "/");
 let configuration = {
   iceServers: [
     {
-      urls: "stun:stun.mavoix.co.in:3478",
+      urls: "stun:stun.mavoix.co.in:3478?transport=udp",
     },
     {
-      urls: "turn:turn.mavoix.co.in:3478",
+      urls: "turn:turn.mavoix.co.in:3478?transport=udp",
       username: "mavoix",
       credential: "mavoix2020",
     },
