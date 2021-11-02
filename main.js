@@ -1,10 +1,16 @@
-import './style.css';
+import "./style.css";
 
-import firebase from 'firebase/app';
-import 'firebase/firestore';
+import firebase from "firebase/app";
+import "firebase/firestore";
 
 const firebaseConfig = {
-  // your config
+  apiKey: "AIzaSyA5dbHOLsGqFZdNMgydV5CeKr834SP8Y-M",
+  authDomain: "video-chat-app-3cc94.firebaseapp.com",
+  projectId: "video-chat-app-3cc94",
+  storageBucket: "video-chat-app-3cc94.appspot.com",
+  messagingSenderId: "184290888611",
+  appId: "1:184290888611:web:3176e9b4e9890c5d912816",
+  measurementId: "G-XTQEVW84K3",
 };
 
 if (!firebase.apps.length) {
@@ -15,7 +21,7 @@ const firestore = firebase.firestore();
 const servers = {
   iceServers: [
     {
-      urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'],
+      urls: ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"],
     },
   ],
   iceCandidatePoolSize: 10,
@@ -27,18 +33,21 @@ let localStream = null;
 let remoteStream = null;
 
 // HTML elements
-const webcamButton = document.getElementById('webcamButton');
-const webcamVideo = document.getElementById('webcamVideo');
-const callButton = document.getElementById('callButton');
-const callInput = document.getElementById('callInput');
-const answerButton = document.getElementById('answerButton');
-const remoteVideo = document.getElementById('remoteVideo');
-const hangupButton = document.getElementById('hangupButton');
+const webcamButton = document.getElementById("webcamButton");
+const webcamVideo = document.getElementById("webcamVideo");
+const callButton = document.getElementById("callButton");
+const callInput = document.getElementById("callInput");
+const answerButton = document.getElementById("answerButton");
+const remoteVideo = document.getElementById("remoteVideo");
+const hangupButton = document.getElementById("hangupButton");
 
 // 1. Setup media sources
 
 webcamButton.onclick = async () => {
-  localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  localStream = await navigator.mediaDevices.getUserMedia({
+    video: true,
+    audio: true,
+  });
   remoteStream = new MediaStream();
 
   // Push tracks from local stream to peer connection
@@ -64,9 +73,9 @@ webcamButton.onclick = async () => {
 // 2. Create an offer
 callButton.onclick = async () => {
   // Reference Firestore collections for signaling
-  const callDoc = firestore.collection('calls').doc();
-  const offerCandidates = callDoc.collection('offerCandidates');
-  const answerCandidates = callDoc.collection('answerCandidates');
+  const callDoc = firestore.collection("calls").doc();
+  const offerCandidates = callDoc.collection("offerCandidates");
+  const answerCandidates = callDoc.collection("answerCandidates");
 
   callInput.value = callDoc.id;
 
@@ -98,7 +107,7 @@ callButton.onclick = async () => {
   // When answered, add candidate to peer connection
   answerCandidates.onSnapshot((snapshot) => {
     snapshot.docChanges().forEach((change) => {
-      if (change.type === 'added') {
+      if (change.type === "added") {
         const candidate = new RTCIceCandidate(change.doc.data());
         pc.addIceCandidate(candidate);
       }
@@ -111,9 +120,9 @@ callButton.onclick = async () => {
 // 3. Answer the call with the unique ID
 answerButton.onclick = async () => {
   const callId = callInput.value;
-  const callDoc = firestore.collection('calls').doc(callId);
-  const answerCandidates = callDoc.collection('answerCandidates');
-  const offerCandidates = callDoc.collection('offerCandidates');
+  const callDoc = firestore.collection("calls").doc(callId);
+  const answerCandidates = callDoc.collection("answerCandidates");
+  const offerCandidates = callDoc.collection("offerCandidates");
 
   pc.onicecandidate = (event) => {
     event.candidate && answerCandidates.add(event.candidate.toJSON());
@@ -137,7 +146,7 @@ answerButton.onclick = async () => {
   offerCandidates.onSnapshot((snapshot) => {
     snapshot.docChanges().forEach((change) => {
       console.log(change);
-      if (change.type === 'added') {
+      if (change.type === "added") {
         let data = change.doc.data();
         pc.addIceCandidate(new RTCIceCandidate(data));
       }
