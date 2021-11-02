@@ -23,6 +23,11 @@ const servers = {
     {
       urls: ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"],
     },
+    {
+      urls: "turn:turn.mavoix.co.in:3478?transport=tcp",
+      username: "mavoix",
+      credential: "mavoix2020",
+    },
   ],
   iceCandidatePoolSize: 10,
 };
