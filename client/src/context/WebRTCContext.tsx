@@ -31,12 +31,12 @@ let configuration = {
       urls: "stun:stun.mavoix.co.in:3478?transport=udp",
     },
     {
-      urls: "turn:turn.mavoix.co.in:3478?transport=udp",
+      urls: "turn:turn.mavoix.co.in:3478?transport=tcp",
       username: "mavoix",
       credential: "mavoix2020",
     },
   ],
-  iceCandidatePoolSize: 10,
+  // iceCandidatePoolSize: 10,
 };
 
 let constraints = { audio: true, video: true };
@@ -241,7 +241,7 @@ const WebRTCContextProvider: React.FC = ({ children }) => {
       caller: callerDetails?.callerId,
     });
 
-    // When true it removes the call button
+    // When true, it removes the call button
     setIsCallAccepted(true);
   };
 
