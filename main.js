@@ -21,7 +21,11 @@ const firestore = firebase.firestore();
 const servers = {
   iceServers: [
     {
-      urls: ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"],
+      urls: [
+        "stun:stun1.l.google.com:19302",
+        "stun:stun2.l.google.com:19302",
+        "stun:stun.mavoix.co.in:3478",
+      ],
     },
     {
       urls: "turn:turn.mavoix.co.in:3478?transport=tcp",
