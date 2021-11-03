@@ -16,21 +16,27 @@ if (!process.env.PORT) process.exit(1);
 console.log("Environment :", process.env.NODE_ENV);
 
 const app = express();
-// export const httpServer = createServer(app);
+// const httpServer = createServer(app);
+const httpServer = require("http").Server(app);
 
-const PORT: number = parseInt(process.env.PORT as string, 10);
+let io = require("socket.io")(httpServer, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
 
 // httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-const server = app.listen(PORT, () => console.log(`Running on port ${PORT}`));
+// const server = app.listen(PORT, () => console.log(`Running on port ${PORT}`));
 
 // const io = new Server(httpServer, {
 //   cors: { origin: "*", methods: ["GET", "POST"] },
 // });
 
-const io = new Server(server, {
-  cors: { origin: "*", methods: ["GET", "POST"] },
-});
+// const io = new Server(server, {
+//   cors: { origin: "*", methods: ["GET", "POST"] },
+// });
 
 /***************************************************************/
 app.use(cors(), express.json());
@@ -92,3 +98,6 @@ io.on("connection", (socket: Socket) => {
 
   socket.on("disconnect", () => socket.broadcast.emit("callEnded"));
 });
+
+const PORT: number = parseInt(process.env.PORT as string, 10);
+httpServer.listen(PORT, () => console.log(`listening on PORT ${PORT}`));
