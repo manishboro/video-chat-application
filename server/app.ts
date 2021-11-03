@@ -1,20 +1,38 @@
+import * as dotenv from "dotenv";
 import express, { Request, Response } from "express";
 import cors from "cors";
 import path from "path";
 import { createServer } from "http";
 import { Server, Socket } from "socket.io";
 
+dotenv.config({ path: "./config.env" });
+
 type CallingUserType = { userToCall: string; sdpOffer: RTCSessionDescriptionInit; callerId: string; displayName: string };
 type ReceivingUserType = { caller: string; sdpAnswer: RTCSessionDescriptionInit; receiverId: string; displayName: string };
 type AddIceCandidateType = { iceCandidate: RTCIceCandidate; to: string; senderType: string };
 
-const app = express();
-export const httpServer = createServer(app);
+// Check whether env variables initialized or not
+if (!process.env.PORT) process.exit(1);
+console.log("Environment :", process.env.NODE_ENV);
 
-const io = new Server(httpServer, {
+const app = express();
+// export const httpServer = createServer(app);
+
+const PORT: number = parseInt(process.env.PORT as string, 10);
+
+// httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+const server = app.listen(PORT, () => console.log(`Running on port ${PORT}`));
+
+// const io = new Server(httpServer, {
+//   cors: { origin: "*", methods: ["GET", "POST"] },
+// });
+
+const io = new Server(server, {
   cors: { origin: "*", methods: ["GET", "POST"] },
 });
 
+/***************************************************************/
 app.use(cors(), express.json());
 
 app.use(express.static(path.resolve(__dirname, "../../client/build")));
