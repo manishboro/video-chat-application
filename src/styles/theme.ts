@@ -13,6 +13,15 @@ ORDER: Base + typography > general layout + grid > page layout > components
 
 // Create a theme instance.
 let theme = createTheme({
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: `
+       body {
+         background-color: #dcdcdc;
+       }
+     `,
+    },
+  },
   breakpoints: {
     values: { xs: 0, sm: 600, md: 960, lg: 1330, xl: 1920 },
   },

@@ -91,7 +91,7 @@ interface CustomTextFieldProps {
   handleChange?: React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement> | undefined;
   handleblur?: React.FocusEventHandler<HTMLInputElement | HTMLTextAreaElement> | undefined;
   endAdornment?: React.ReactNode | undefined;
-  labelWidth: number;
+  labelWidth?: number;
   customHelperText?: string;
   errors?: boolean;
   touched?: boolean;
@@ -131,11 +131,11 @@ const CustomTextField: React.FC<CustomTextFieldProps> = ({
       error={errors && touched}
       helperText={errors && touched ? errors : customHelperText}
       onChange={handleChange}
+      onBlur={handleblur}
       required={required}
       className={classes.textField}
       classes={{ root: classes.textField }}
-      inputProps={{ /* style: { fontSize: "1.7rem", padding: "1.5rem", ...inputStyle },*/ ref: customRef }}
-      // InputLabelProps={{ style: { fontSize: "1.7rem" } }}
+      inputProps={{ ref: customRef }}
       disabled={disabled}
       style={{ ...style }}
     />

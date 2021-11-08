@@ -4,19 +4,25 @@ import "./styles/index.css";
 import { HashRouter as Router } from "react-router-dom";
 
 import { ThemeProvider } from "@mui/material/styles";
+import { CssBaseline } from "@mui/material";
 
 import App from "./App";
 import theme from "./styles/theme";
 
 import reportWebVitals from "./reportWebVitals";
-import { CssBaseline } from "@mui/material";
+import UserContextProvider from "./context/UserContext";
+import ModalContextProvider from "./context/ModalContext";
 
 ReactDOM.render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <Router>
         <CssBaseline />
-        <App />
+        <ModalContextProvider>
+          <UserContextProvider>
+            <App />
+          </UserContextProvider>
+        </ModalContextProvider>
       </Router>
     </ThemeProvider>
   </React.StrictMode>,
