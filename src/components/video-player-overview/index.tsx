@@ -1,6 +1,15 @@
 import React from "react";
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, doc, setDoc, addDoc, onSnapshot, getDoc, updateDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  doc,
+  setDoc,
+  addDoc,
+  onSnapshot,
+  getDoc,
+  updateDoc,
+} from "firebase/firestore";
 
 import { Box } from "@mui/system";
 import { Alert, IconButton, Modal } from "@mui/material";
@@ -49,7 +58,8 @@ export default function VideoPlayerOverview() {
       localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
 
       // Pull tracks from remote stream, add to video stream
-      pc.ontrack = (event) => event.streams[0].getTracks().forEach((track) => remoteStream.addTrack(track));
+      pc.ontrack = (event) =>
+        event.streams[0].getTracks().forEach((track) => remoteStream.addTrack(track));
 
       // Add the Streams to refs so that the video can be displayed
       if (localStreamRef.current && remoteStreamRef.current) {
@@ -58,109 +68,136 @@ export default function VideoPlayerOverview() {
       }
 
       setIsCameraOn(true);
-    } catch (e: any) {
+    } catch (err: any) {
       alert?.handleAlertProps("severity", "warning");
       alert?.handleAlertProps("showAlert", true);
-      alert?.handleSnackbar(e.message);
+      alert?.handleSnackbar(err.message);
     }
   };
 
   const startCall = async () => {
-    const newDocRef = doc(firestore, "calls_2", nanoid());
-    const offerCandidatesCollectionRef = collection(firestore, "calls_2", newDocRef.id, "offerCandidates"); // collection ref
-    const answerCandidatesCollectionRef = collection(firestore, "calls_2", newDocRef.id, "answerCandidates"); // collection ref
+    try {
+      const newDocRef = doc(firestore, "calls_2", nanoid());
+      const offerCandidatesCollectionRef = collection(
+        firestore,
+        "calls_2",
+        newDocRef.id,
+        "offerCandidates"
+      ); // collection ref
+      const answerCandidatesCollectionRef = collection(
+        firestore,
+        "calls_2",
+        newDocRef.id,
+        "answerCandidates"
+      ); // collection ref
 
-    // Get ICE candidates for caller, save to db
-    pc.onicecandidate = async (event) => {
-      if (event.candidate) {
-        await addDoc(offerCandidatesCollectionRef, event.candidate.toJSON());
-      }
-    };
+      // Get ICE candidates for caller, save to db
+      pc.onicecandidate = async (event) => {
+        if (event.candidate) await addDoc(offerCandidatesCollectionRef, event.candidate.toJSON());
+      };
 
-    // Create offer
-    const offerDescription = await pc.createOffer();
-    await pc.setLocalDescription(offerDescription);
-    const offer = { sdp: offerDescription.sdp, type: offerDescription.type };
+      // Create offer
+      const offerDescription = await pc.createOffer();
+      await pc.setLocalDescription(offerDescription);
+      const offer = { sdp: offerDescription.sdp, type: offerDescription.type };
 
-    // Store offer and callerName in the specified document
-    await setDoc(newDocRef, { offer, callerName: userCtx?.displayName });
+      // Store offer and callerName in the specified document
+      await setDoc(newDocRef, { offer, callerName: userCtx?.displayName });
 
-    // Attach listeners to look for any changes in the document
-    onSnapshot(newDocRef, (docSnapshot) => {
-      if (docSnapshot.exists()) {
-        const docData = docSnapshot.data();
-        setRemoteUserDisplayName(docData.receiverName);
-        // Save answer description as remote description
-        if (!pc.currentRemoteDescription && docData?.answer) {
-          const answerDescription = new RTCSessionDescription(docData.answer);
-          pc.setRemoteDescription(answerDescription);
-        }
-      }
-    });
-
-    // Attach listeners to look for any changes in the collection
-    onSnapshot(answerCandidatesCollectionRef, (collectionSnapshot) => {
-      collectionSnapshot.docChanges().forEach((change) => {
-        console.log("callert", change);
-        if (change.type === "added") {
-          const candidate = new RTCIceCandidate(change.doc.data());
-          pc.addIceCandidate(candidate);
+      // Attach listeners to look for any changes in the document
+      onSnapshot(newDocRef, (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const docData = docSnapshot.data();
+          // Save answer description as remote description
+          if (!pc.currentRemoteDescription && docData?.answer) {
+            const answerDescription = new RTCSessionDescription(docData.answer);
+            pc.setRemoteDescription(answerDescription);
+          }
         }
       });
-    });
 
-    // Set the docId as the roomId for future reference
-    setRoomId(newDocRef.id);
+      // Attach listeners to look for any changes in the collection
+      onSnapshot(answerCandidatesCollectionRef, (collectionSnapshot) => {
+        collectionSnapshot.docChanges().forEach((change) => {
+          if (change.type === "added") {
+            const candidate = new RTCIceCandidate(change.doc.data());
+            pc.addIceCandidate(candidate);
+          }
+        });
+      });
+
+      // Set the docId as the roomId for future reference
+      setRoomId(newDocRef.id);
+    } catch (err: any) {
+      alert?.handleAlertProps("severity", "warning");
+      alert?.handleAlertProps("showAlert", true);
+      alert?.handleSnackbar(err.message);
+    }
   };
 
   const answerCall = async (roomId: string) => {
-    const docRef = doc(firestore, "calls_2", roomId);
-    const offerCandidatesCollectionRef = collection(firestore, "calls_2", roomId, "offerCandidates"); // collection ref
-    const answerCandidatesCollectionRef = collection(firestore, "calls_2", roomId, "answerCandidates"); // collection ref
+    try {
+      const offerCandidatesCollectionRef = collection(
+        firestore,
+        "calls_2",
+        roomId,
+        "offerCandidates"
+      ); // collection ref
+      const answerCandidatesCollectionRef = collection(
+        firestore,
+        "calls_2",
+        roomId,
+        "answerCandidates"
+      ); // collection ref
 
-    // Get ICE candidates for receiver, save to db
-    pc.onicecandidate = async (event) => {
-      if (event.candidate) {
-        await addDoc(answerCandidatesCollectionRef, event.candidate.toJSON());
+      // Get ICE candidates for receiver, save to db
+      pc.onicecandidate = async (event) => {
+        if (event.candidate) await addDoc(answerCandidatesCollectionRef, event.candidate.toJSON());
+      };
+
+      // Save offer description as remote description
+      const docRef = doc(firestore, "calls_2", roomId);
+      const docSnapshot = await getDoc(docRef);
+
+      if (docSnapshot.exists()) {
+        const docData = docSnapshot.data();
+        setRemoteUserDisplayName(docData.callerName);
+        const offerDescription = new RTCSessionDescription(docData.offer);
+        await pc.setRemoteDescription(offerDescription);
       }
-    };
 
-    // Save offer description as remote description
-    const docSnapshot = await getDoc(docRef);
+      // Create answer
+      const answerDescription = await pc.createAnswer();
+      await pc.setLocalDescription(answerDescription);
 
-    if (docSnapshot.exists()) {
-      const docData = docSnapshot.data();
-      const offerDescription = docData.offer;
-      setRemoteUserDisplayName(docData.callerName);
-      await pc.setRemoteDescription(new RTCSessionDescription(offerDescription));
-    }
+      const answer = {
+        type: answerDescription.type,
+        sdp: answerDescription.sdp,
+      };
 
-    // Create answer
-    const answerDescription = await pc.createAnswer();
-    await pc.setLocalDescription(answerDescription);
+      await updateDoc(docRef, { answer, receiverName: userCtx?.displayName });
 
-    const answer = {
-      type: answerDescription.type,
-      sdp: answerDescription.sdp,
-    };
-
-    await updateDoc(docRef, { answer, receiverName: userCtx?.displayName });
-
-    // Attach listeners to look for any changes in the collection
-    onSnapshot(offerCandidatesCollectionRef, (collectionSnapshot) => {
-      collectionSnapshot.docChanges().forEach((change) => {
-        console.log("receiver", change);
-        if (change.type === "added") {
-          const candidate = new RTCIceCandidate(change.doc.data());
-          pc.addIceCandidate(candidate);
-        }
+      // Attach listeners to look for any changes in the collection
+      onSnapshot(offerCandidatesCollectionRef, (collectionSnapshot) => {
+        collectionSnapshot.docChanges().forEach((change) => {
+          if (change.type === "added") {
+            const candidate = new RTCIceCandidate(change.doc.data());
+            pc.addIceCandidate(candidate);
+          }
+        });
       });
-    });
+    } catch (err: any) {
+      alert?.handleAlertProps("severity", "warning");
+      alert?.handleAlertProps("showAlert", true);
+      alert?.handleSnackbar(err.message);
+    }
   };
 
   const openModal = () => {
     modal?.handleOpen();
-    modal?.setComponent(<JoinMeetingForm handleClose={modal?.handleClose} answerCall={answerCall} alert={alert} />);
+    modal?.setComponent(
+      <JoinMeetingForm handleClose={modal?.handleClose} answerCall={answerCall} alert={alert} />
+    );
   };
 
   return (
@@ -186,7 +223,12 @@ export default function VideoPlayerOverview() {
           }}
         >
           <VideoPlayer videoRef={localStreamRef} displayName={userCtx?.displayName} muted={true} />
-          <VideoPlayer videoRef={remoteStreamRef} displayName={remoteUserDisplayName} muted={false} isVisible={true} />
+          <VideoPlayer
+            videoRef={remoteStreamRef}
+            displayName={remoteUserDisplayName}
+            muted={false}
+            isVisible={true}
+          />
         </Box>
 
         <Box
@@ -212,7 +254,12 @@ export default function VideoPlayerOverview() {
                   rootStyles={{ marginRight: "1rem" }}
                 />
 
-                <CustomButton text="Join Meeting" Icon={KeyboardIcon} IconDirection="left" fn={openModal} />
+                <CustomButton
+                  text="Join Meeting"
+                  Icon={KeyboardIcon}
+                  IconDirection="left"
+                  fn={openModal}
+                />
               </Box>
             </>
           )}
@@ -225,7 +272,10 @@ export default function VideoPlayerOverview() {
         </IconButton>
       )}
 
-      <Modal open={!isCameraOn} sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Modal
+        open={!isCameraOn}
+        sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+      >
         <Box>
           <Alert
             severity="info"
