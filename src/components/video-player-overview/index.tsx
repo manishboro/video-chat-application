@@ -1,15 +1,7 @@
 import React from "react";
+import { nanoid } from "nanoid";
 import { initializeApp } from "firebase/app";
-import {
-  getFirestore,
-  collection,
-  doc,
-  setDoc,
-  addDoc,
-  onSnapshot,
-  getDoc,
-  updateDoc,
-} from "firebase/firestore";
+import { getFirestore, collection, doc, setDoc, addDoc, onSnapshot, getDoc, updateDoc } from "firebase/firestore";
 
 import { Box } from "@mui/system";
 import { Alert, IconButton, Modal } from "@mui/material";
@@ -25,7 +17,6 @@ import { useUserContext } from "../../context/UserContext";
 import { useAlertContext } from "../../context/AlertContext";
 import { useModalContext } from "../../context/ModalContext";
 import JoinMeetingForm from "../join-meeting-form";
-import { nanoid } from "nanoid";
 
 let app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
@@ -43,7 +34,8 @@ export default function VideoPlayerOverview() {
   const [roomId, setRoomId] = React.useState("");
   const [remoteUserDisplayName, setRemoteUserDisplayName] = React.useState("");
   const [isCameraOn, setIsCameraOn] = React.useState(false);
-  // const [isCallAccepted, setIsCallAccepted] = React.useState(false); // This state has to be common across local and remote connection
+  // This state has to be common across local and remote connection
+  const [isCallAccepted, setIsCallAccepted] = React.useState(false);
 
   console.log(roomId);
 
@@ -60,8 +52,7 @@ export default function VideoPlayerOverview() {
       localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
 
       // Pull tracks from remote stream, add to video stream
-      pc.ontrack = (event) =>
-        event.streams[0].getTracks().forEach((track) => remoteStream.addTrack(track));
+      pc.ontrack = (event) => event.streams[0].getTracks().forEach((track) => remoteStream.addTrack(track));
 
       // Add the Streams to refs so that the video can be displayed
       if (localStreamRef.current && remoteStreamRef.current) {
@@ -80,20 +71,12 @@ export default function VideoPlayerOverview() {
   const startCall = async () => {
     try {
       const newDocRef = doc(firestore, "calls_2", nanoid());
-      const offerCandidatesCollectionRef = collection(
-        firestore,
-        "calls_2",
-        newDocRef.id,
-        "offerCandidates"
-      ); // collection ref
-      const answerCandidatesCollectionRef = collection(
-        firestore,
-        "calls_2",
-        newDocRef.id,
-        "answerCandidates"
-      ); // collection ref
+      const offerCandidatesCollectionRef = collection(firestore, "calls_2", newDocRef.id, "offerCandidates"); // collection ref
+
+      const answerCandidatesCollectionRef = collection(firestore, "calls_2", newDocRef.id, "answerCandidates"); // collection ref
 
       // Get ICE candidates for caller, save to db
+      // **The listener should be added before setting the offer
       pc.onicecandidate = async (event) => {
         if (event.candidate) await addDoc(offerCandidatesCollectionRef, event.candidate.toJSON());
       };
@@ -110,6 +93,9 @@ export default function VideoPlayerOverview() {
       onSnapshot(newDocRef, (docSnapshot) => {
         if (docSnapshot.exists()) {
           const docData = docSnapshot.data();
+          setRemoteUserDisplayName(docData.receiverName);
+          setIsCallAccepted(docData.isCallAccepted ?? false);
+
           // Save answer description as remote description
           if (!pc.currentRemoteDescription && docData?.answer) {
             const answerDescription = new RTCSessionDescription(docData.answer);
@@ -139,18 +125,8 @@ export default function VideoPlayerOverview() {
 
   const answerCall = async (roomId: string) => {
     try {
-      const offerCandidatesCollectionRef = collection(
-        firestore,
-        "calls_2",
-        roomId,
-        "offerCandidates"
-      ); // collection ref
-      const answerCandidatesCollectionRef = collection(
-        firestore,
-        "calls_2",
-        roomId,
-        "answerCandidates"
-      ); // collection ref
+      const offerCandidatesCollectionRef = collection(firestore, "calls_2", roomId, "offerCandidates"); // collection ref
+      const answerCandidatesCollectionRef = collection(firestore, "calls_2", roomId, "answerCandidates"); // collection ref
 
       // Get ICE candidates for receiver, save to db
       pc.onicecandidate = async (event) => {
@@ -171,13 +147,10 @@ export default function VideoPlayerOverview() {
       // Create answer
       const answerDescription = await pc.createAnswer();
       await pc.setLocalDescription(answerDescription);
+      const answer = { type: answerDescription.type, sdp: answerDescription.sdp };
 
-      const answer = {
-        type: answerDescription.type,
-        sdp: answerDescription.sdp,
-      };
-
-      await updateDoc(docRef, { answer, receiverName: userCtx?.displayName });
+      await updateDoc(docRef, { answer, receiverName: userCtx?.displayName, isCallAccepted: true });
+      setIsCallAccepted(true);
 
       // Attach listeners to look for any changes in the collection
       onSnapshot(offerCandidatesCollectionRef, (collectionSnapshot) => {
@@ -197,9 +170,7 @@ export default function VideoPlayerOverview() {
 
   const openModal = () => {
     modal?.handleOpen();
-    modal?.setComponent(
-      <JoinMeetingForm handleClose={modal?.handleClose} answerCall={answerCall} alert={alert} />
-    );
+    modal?.setComponent(<JoinMeetingForm handleClose={modal?.handleClose} answerCall={answerCall} alert={alert} />);
   };
 
   return (
@@ -225,11 +196,14 @@ export default function VideoPlayerOverview() {
           }}
         >
           <VideoPlayer videoRef={localStreamRef} displayName={userCtx?.displayName} muted={true} />
+
           <VideoPlayer
             videoRef={remoteStreamRef}
             displayName={remoteUserDisplayName}
             muted={false}
-            isVisible={true}
+            isVisible={isCallAccepted}
+            showMicAndVideo={true}
+            disableMicAndVideoBtn={true}
           />
         </Box>
 
@@ -256,12 +230,7 @@ export default function VideoPlayerOverview() {
                   rootStyles={{ marginRight: "1rem" }}
                 />
 
-                <CustomButton
-                  text="Join Meeting"
-                  Icon={KeyboardIcon}
-                  IconDirection="left"
-                  fn={openModal}
-                />
+                <CustomButton text="Join Meeting" Icon={KeyboardIcon} IconDirection="left" fn={openModal} />
               </Box>
             </>
           )}
@@ -274,10 +243,7 @@ export default function VideoPlayerOverview() {
         </IconButton>
       )}
 
-      <Modal
-        open={!isCameraOn}
-        sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}
-      >
+      <Modal open={!isCameraOn} sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
         <Box>
           <Alert
             severity="info"
