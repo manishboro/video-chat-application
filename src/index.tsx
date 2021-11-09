@@ -12,17 +12,20 @@ import theme from "./styles/theme";
 import reportWebVitals from "./reportWebVitals";
 import UserContextProvider from "./context/UserContext";
 import ModalContextProvider from "./context/ModalContext";
+import AlertContextProvider from "./context/AlertContext";
 
 ReactDOM.render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <Router>
         <CssBaseline />
-        <ModalContextProvider>
-          <UserContextProvider>
-            <App />
-          </UserContextProvider>
-        </ModalContextProvider>
+        <AlertContextProvider>
+          <ModalContextProvider>
+            <UserContextProvider>
+              <App />
+            </UserContextProvider>
+          </ModalContextProvider>
+        </AlertContextProvider>
       </Router>
     </ThemeProvider>
   </React.StrictMode>,

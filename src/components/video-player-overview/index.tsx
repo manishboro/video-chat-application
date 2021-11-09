@@ -1,19 +1,22 @@
 import React from "react";
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, doc, addDoc, onSnapshot, getDoc } from "firebase/firestore";
+import { getFirestore, collection, doc, setDoc, addDoc, onSnapshot, getDoc, updateDoc } from "firebase/firestore";
 
 import { Box } from "@mui/system";
 import { Alert, IconButton, Modal } from "@mui/material";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import VideoCameraFrontIcon from "@mui/icons-material/VideoCameraFront";
 import KeyboardIcon from "@mui/icons-material/Keyboard";
-import SettingsIcon from "@mui/icons-material/Settings";
 import MenuIcon from "@mui/icons-material/Menu";
 
 import { firebaseConfig, servers } from "./config";
 import CustomButton from "../../utility-components/CustomButton";
 import VideoPlayer, { MicAndVideo } from "../video-player";
 import { useUserContext } from "../../context/UserContext";
+import { useAlertContext } from "../../context/AlertContext";
+import { useModalContext } from "../../context/ModalContext";
+import JoinMeetingForm from "../join-meeting-form";
+import { nanoid } from "nanoid";
 
 let app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
@@ -25,68 +28,139 @@ let remoteStream: MediaStream;
 
 export default function VideoPlayerOverview() {
   const userCtx = useUserContext();
+  const alert = useAlertContext();
+  const modal = useModalContext();
 
   const [roomId, setRoomId] = React.useState("");
   const [remoteUserDisplayName, setRemoteUserDisplayName] = React.useState("");
   const [isCameraOn, setIsCameraOn] = React.useState(false);
+  const [isCallAccepted, setIsCallAccepted] = React.useState(false); // This state has to be common across local and remote connection
 
   // Create refs to store the local and remote stream
   const localStreamRef = React.useRef<HTMLVideoElement | null>(null);
   const remoteStreamRef = React.useRef<HTMLVideoElement | null>(null);
 
   const openCamera = async () => {
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    remoteStream = new MediaStream();
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      remoteStream = new MediaStream();
 
-    // Push tracks from local stream to peer connection
-    localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
+      // Push tracks from local stream to peer connection
+      localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
 
-    // Pull tracks from remote stream, add to video stream
-    pc.ontrack = (event) => event.streams[0].getTracks().forEach((track) => remoteStream.addTrack(track));
+      // Pull tracks from remote stream, add to video stream
+      pc.ontrack = (event) => event.streams[0].getTracks().forEach((track) => remoteStream.addTrack(track));
 
-    // Add the Streams to refs so that the video can be displayed
-    if (localStreamRef.current && remoteStreamRef.current) {
-      localStreamRef.current.srcObject = localStream;
-      remoteStreamRef.current.srcObject = remoteStream;
+      // Add the Streams to refs so that the video can be displayed
+      if (localStreamRef.current && remoteStreamRef.current) {
+        localStreamRef.current.srcObject = localStream;
+        remoteStreamRef.current.srcObject = remoteStream;
+      }
+
+      setIsCameraOn(true);
+    } catch (e: any) {
+      alert?.handleAlertProps("severity", "warning");
+      alert?.handleAlertProps("showAlert", true);
+      alert?.handleSnackbar(e.message);
     }
-
-    setIsCameraOn(true);
   };
 
   const startCall = async () => {
+    const newDocRef = doc(firestore, "calls_2", nanoid());
+    const offerCandidatesCollectionRef = collection(firestore, "calls_2", newDocRef.id, "offerCandidates"); // collection ref
+    const answerCandidatesCollectionRef = collection(firestore, "calls_2", newDocRef.id, "answerCandidates"); // collection ref
+
+    // Get ICE candidates for caller, save to db
+    pc.onicecandidate = async (event) => {
+      if (event.candidate) {
+        await addDoc(offerCandidatesCollectionRef, event.candidate.toJSON());
+      }
+    };
+
     // Create offer
     const offerDescription = await pc.createOffer();
     await pc.setLocalDescription(offerDescription);
+    const offer = { sdp: offerDescription.sdp, type: offerDescription.type };
 
-    const offer = {
-      sdp: offerDescription.sdp,
-      type: offerDescription.type,
-    };
+    // Store offer and callerName in the specified document
+    await setDoc(newDocRef, { offer, callerName: userCtx?.displayName });
 
-    // Store document in calls_2 collection with a unique docID
-    const callsCollectionRef = collection(firestore, "calls_2"); // collection ref
-    const newDocRef = await addDoc(callsCollectionRef, { offer, displayName: userCtx?.displayName });
-
-    // Set the docId as the roomId for future reference
-    setRoomId(newDocRef.id);
-
-    // Attach listeners to a document
+    // Attach listeners to look for any changes in the document
     onSnapshot(newDocRef, (docSnapshot) => {
       if (docSnapshot.exists()) {
         const docData = docSnapshot.data();
-        console.log(`In realtime ${JSON.stringify(docData)}`);
+        setRemoteUserDisplayName(docData.receiverName);
+        // Save answer description as remote description
+        if (!pc.currentRemoteDescription && docData?.answer) {
+          const answerDescription = new RTCSessionDescription(docData.answer);
+          pc.setRemoteDescription(answerDescription);
+        }
       }
     });
+
+    // Attach listeners to look for any changes in the collection
+    onSnapshot(answerCandidatesCollectionRef, (collectionSnapshot) => {
+      collectionSnapshot.docChanges().forEach((change) => {
+        console.log("callert", change);
+        if (change.type === "added") {
+          const candidate = new RTCIceCandidate(change.doc.data());
+          pc.addIceCandidate(candidate);
+        }
+      });
+    });
+
+    // Set the docId as the roomId for future reference
+    setRoomId(newDocRef.id);
   };
 
   const answerCall = async (roomId: string) => {
-    const callsCollectionRef = collection(firestore, "calls_2");
     const docRef = doc(firestore, "calls_2", roomId);
+    const offerCandidatesCollectionRef = collection(firestore, "calls_2", roomId, "offerCandidates"); // collection ref
+    const answerCandidatesCollectionRef = collection(firestore, "calls_2", roomId, "answerCandidates"); // collection ref
+
+    // Get ICE candidates for receiver, save to db
+    pc.onicecandidate = async (event) => {
+      if (event.candidate) {
+        await addDoc(answerCandidatesCollectionRef, event.candidate.toJSON());
+      }
+    };
+
+    // Save offer description as remote description
     const docSnapshot = await getDoc(docRef);
 
     if (docSnapshot.exists()) {
-      docSnapshot.data();
+      const docData = docSnapshot.data();
+      const offerDescription = docData.offer;
+      setRemoteUserDisplayName(docData.callerName);
+      await pc.setRemoteDescription(new RTCSessionDescription(offerDescription));
     }
+
+    // Create answer
+    const answerDescription = await pc.createAnswer();
+    await pc.setLocalDescription(answerDescription);
+
+    const answer = {
+      type: answerDescription.type,
+      sdp: answerDescription.sdp,
+    };
+
+    await updateDoc(docRef, { answer, receiverName: userCtx?.displayName });
+
+    // Attach listeners to look for any changes in the collection
+    onSnapshot(offerCandidatesCollectionRef, (collectionSnapshot) => {
+      collectionSnapshot.docChanges().forEach((change) => {
+        console.log("receiver", change);
+        if (change.type === "added") {
+          const candidate = new RTCIceCandidate(change.doc.data());
+          pc.addIceCandidate(candidate);
+        }
+      });
+    });
+  };
+
+  const openModal = () => {
+    modal?.handleOpen();
+    modal?.setComponent(<JoinMeetingForm handleClose={modal?.handleClose} answerCall={answerCall} alert={alert} />);
   };
 
   return (
@@ -112,7 +186,7 @@ export default function VideoPlayerOverview() {
           }}
         >
           <VideoPlayer videoRef={localStreamRef} displayName={userCtx?.displayName} muted={true} />
-          <VideoPlayer videoRef={remoteStreamRef} displayName={remoteUserDisplayName} muted={false} isVisible={false} />
+          <VideoPlayer videoRef={remoteStreamRef} displayName={remoteUserDisplayName} muted={false} isVisible={true} />
         </Box>
 
         <Box
@@ -125,25 +199,31 @@ export default function VideoPlayerOverview() {
             justifyContent: "space-between",
           }}
         >
-          <MicAndVideo audioBool={true} videoBool={true} />
+          {isCameraOn && (
+            <>
+              <MicAndVideo audioBool={true} videoBool={true} />
 
-          <Box>
-            <CustomButton
-              text="Create Meeting"
-              fn={startCall}
-              Icon={VideoCameraFrontIcon}
-              IconDirection="left"
-              rootStyles={{ marginRight: "1rem" }}
-            />
+              <Box>
+                <CustomButton
+                  text="Create Meeting"
+                  fn={startCall}
+                  Icon={VideoCameraFrontIcon}
+                  IconDirection="left"
+                  rootStyles={{ marginRight: "1rem" }}
+                />
 
-            <CustomButton text="Join Meeting" Icon={KeyboardIcon} IconDirection="left" fn={startCall} />
-          </Box>
+                <CustomButton text="Join Meeting" Icon={KeyboardIcon} IconDirection="left" fn={openModal} />
+              </Box>
+            </>
+          )}
         </Box>
       </Box>
 
-      <IconButton sx={{ position: "absolute", top: "1rem", right: "1rem" }}>
-        <MenuIcon sx={{ color: "white", fontSize: "2.5rem" }} />
-      </IconButton>
+      {isCameraOn && (
+        <IconButton sx={{ position: "absolute", top: "1rem", right: "1rem" }}>
+          <MenuIcon sx={{ color: "white", fontSize: "2.5rem" }} />
+        </IconButton>
+      )}
 
       <Modal open={!isCameraOn} sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
         <Box>
