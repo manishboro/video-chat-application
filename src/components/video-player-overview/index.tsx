@@ -120,6 +120,10 @@ export default function VideoPlayerOverview() {
       alert?.handleAlertProps("severity", "warning");
       alert?.handleAlertProps("showAlert", true);
       alert?.handleSnackbar(err.message);
+    } finally {
+      alert?.handleAlertProps("severity", "success");
+      alert?.handleAlertProps("showAlert", true);
+      alert?.handleSnackbar("Meeting created");
     }
   };
 
@@ -188,7 +192,32 @@ export default function VideoPlayerOverview() {
       >
         <Box
           sx={{
-            height: "calc(100vh - 100px)",
+            height: "100px",
+            width: "100%",
+            padding: "0 2rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {isCameraOn && (
+            <>
+              <CustomButton
+                text="Create Meeting"
+                fn={startCall}
+                Icon={VideoCameraFrontIcon}
+                IconDirection="left"
+                rootStyles={{ marginRight: "1rem" }}
+              />
+
+              <CustomButton text="Join Meeting" Icon={KeyboardIcon} IconDirection="left" fn={openModal} />
+            </>
+          )}
+        </Box>
+
+        <Box
+          sx={{
+            height: "calc(100vh - 200px)",
             width: "100vw",
             display: "flex",
             alignItems: "center",
@@ -214,26 +243,10 @@ export default function VideoPlayerOverview() {
             padding: "0 2rem",
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between",
+            justifyContent: "center",
           }}
         >
-          {isCameraOn && (
-            <>
-              <MicAndVideo audioBool={true} videoBool={true} />
-
-              <Box>
-                <CustomButton
-                  text="Create Meeting"
-                  fn={startCall}
-                  Icon={VideoCameraFrontIcon}
-                  IconDirection="left"
-                  rootStyles={{ marginRight: "1rem" }}
-                />
-
-                <CustomButton text="Join Meeting" Icon={KeyboardIcon} IconDirection="left" fn={openModal} />
-              </Box>
-            </>
-          )}
+          {isCameraOn && <MicAndVideo audioBool={true} videoBool={true} />}
         </Box>
       </Box>
 
