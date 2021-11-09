@@ -43,7 +43,9 @@ export default function VideoPlayerOverview() {
   const [roomId, setRoomId] = React.useState("");
   const [remoteUserDisplayName, setRemoteUserDisplayName] = React.useState("");
   const [isCameraOn, setIsCameraOn] = React.useState(false);
-  const [isCallAccepted, setIsCallAccepted] = React.useState(false); // This state has to be common across local and remote connection
+  // const [isCallAccepted, setIsCallAccepted] = React.useState(false); // This state has to be common across local and remote connection
+
+  console.log(roomId);
 
   // Create refs to store the local and remote stream
   const localStreamRef = React.useRef<HTMLVideoElement | null>(null);
