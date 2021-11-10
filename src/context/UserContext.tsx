@@ -23,16 +23,18 @@ export const useUserContext = () => React.useContext(UserCtx);
 
 const UserContextProvider: React.FC = ({ children }) => {
   const [displayName, setDisplayName] = React.useState("");
-  const [audioOnBool, setAudioOnBool] = React.useState(false);
-  const [videoOnBool, setVideoOnBool] = React.useState(false);
+  const [audioOnBool, setAudioOnBool] = React.useState(true);
+  const [videoOnBool, setVideoOnBool] = React.useState(true);
 
   // Flipping states to run the below useEffect
   const [trigger, setTrigger] = React.useState(false);
 
   React.useEffect(() => {
-    if (getItemFromStorage("displayName")) {
-      setDisplayName(getItemFromStorage("displayName") ?? "");
-    }
+    if (getItemFromStorage("displayName")) setDisplayName(getItemFromStorage("displayName") ?? "");
+
+    if (getItemFromStorage("audioOnBool")) setAudioOnBool(getItemFromStorage("audioOnBool") === "true" ? true : false);
+
+    if (getItemFromStorage("videoOnBool")) setVideoOnBool(getItemFromStorage("videoOnBool") === "true" ? true : false);
   }, [trigger]);
 
   return (

@@ -18,6 +18,7 @@ import { firebaseConfig, servers } from "./config";
 import { useUserContext } from "../../context/UserContext";
 import { useAlertContext } from "../../context/AlertContext";
 import { useModalContext } from "../../context/ModalContext";
+import { setItemToStorage } from "../../utils/localStorage";
 
 let app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
@@ -32,13 +33,11 @@ export default function VideoPlayerOverview() {
   const alert = useAlertContext();
   const modal = useModalContext();
 
-  React.useEffect(() => {}, []);
-
   const [roomId, setRoomId] = React.useState("");
   const [remoteUserDisplayName, setRemoteUserDisplayName] = React.useState("");
+  const [myStream, setMyStream] = React.useState<MediaStream | null>(null);
   const [isCameraOn, setIsCameraOn] = React.useState(false);
-  // This state has to be common across local and remote connection
-  const [isCallAccepted, setIsCallAccepted] = React.useState(false);
+  const [isCallAccepted, setIsCallAccepted] = React.useState(false); // This state has to be common across local and remote connection
 
   // Create refs to store the local and remote stream
   const localStreamRef = React.useRef<HTMLVideoElement | null>(null);
@@ -57,6 +56,7 @@ export default function VideoPlayerOverview() {
 
       // Add the Streams to refs so that the video can be displayed
       if (localStreamRef.current && remoteStreamRef.current) {
+        setMyStream(localStream);
         localStreamRef.current.srcObject = localStream;
         remoteStreamRef.current.srcObject = remoteStream;
       }
@@ -113,19 +113,13 @@ export default function VideoPlayerOverview() {
         });
       });
 
+      openModal(RoomIDForm, { roomId: newDocRef.id });
+
       // Set the docId as the roomId for future reference
       setRoomId(newDocRef.id);
-
-      openModal(RoomIDForm, { roomId: newDocRef.id });
     } catch (err: any) {
-      // alert?.handleAlertProps("severity", "warning");
-      // alert?.handleAlertProps("showAlert", true);
-      // alert?.handleSnackbar(err.message);
       alert?.setStateSnackbarContext(err.message, "warning");
     } finally {
-      // alert?.handleAlertProps("severity", "success");
-      // alert?.handleAlertProps("showAlert", true);
-      // alert?.handleSnackbar("Meeting created");
       alert?.setStateSnackbarContext("Meeting created", "success");
     }
   };
@@ -173,12 +167,33 @@ export default function VideoPlayerOverview() {
     }
   };
 
+  const updateAudio = () => {
+    if (myStream) {
+      myStream.getAudioTracks()[0].enabled = !userCtx?.audioOnBool;
+      userCtx?.setAudioOnBool(!userCtx?.audioOnBool);
+      setItemToStorage("audioOnBool", new Boolean(!userCtx?.audioOnBool).toString());
+    }
+  };
+
+  const updateVideo = () => {
+    if (myStream) {
+      myStream.getVideoTracks()[0].enabled = !userCtx?.videoOnBool;
+      userCtx?.setVideoOnBool(!userCtx?.videoOnBool);
+      setItemToStorage("videoOnBool", new Boolean(!userCtx?.videoOnBool).toString());
+    }
+  };
+
   const openModal = (Component: React.ElementType, otherProps?: object) => {
     modal?.handleOpen();
     modal?.setComponent(<Component handleClose={modal?.handleClose} alert={alert} {...otherProps} />);
   };
 
-  console.log(roomId);
+  React.useEffect(() => {
+    if (myStream) {
+      myStream.getAudioTracks()[0].enabled = userCtx?.audioOnBool === undefined ? false : userCtx?.audioOnBool;
+      myStream.getVideoTracks()[0].enabled = userCtx?.videoOnBool === undefined ? false : userCtx?.videoOnBool;
+    }
+  }, [myStream]);
 
   return (
     <>
@@ -254,7 +269,14 @@ export default function VideoPlayerOverview() {
             justifyContent: "center",
           }}
         >
-          {isCameraOn && <MicAndVideo audioBool={true} videoBool={true} />}
+          {isCameraOn && (
+            <MicAndVideo
+              audioBool={userCtx?.audioOnBool}
+              videoBool={userCtx?.videoOnBool}
+              updateMic={updateAudio}
+              updateVideo={updateVideo}
+            />
+          )}
         </Box>
       </Box>
 

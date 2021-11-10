@@ -103,7 +103,7 @@ export const MicAndVideo = ({
         <IconButton
           className={classes.iconButton}
           disabled={disableMicAndVideoBtn}
-          style={{ backgroundColor: audioBool || disableMicAndVideoBtn ? "rgba(0, 0, 0, .7)" : "red" }}
+          style={{ backgroundColor: videoBool || disableMicAndVideoBtn ? "rgba(0, 0, 0, .7)" : "red" }}
           onClick={() => (updateVideo ? updateVideo() : null)}
         >
           {videoBool ? <StyledVideocamIcon /> : <StyledVideocamOffIcon />}
