@@ -7,7 +7,13 @@ import { StyledMicIcon, StyledMicOffIcon, StyledVideocamIcon, StyledVideocamOffI
 type VideoRef = React.MutableRefObject<HTMLVideoElement | null>;
 
 const useStyles = makeStyles({
-  root: { position: "relative" },
+  root: {
+    position: "relative",
+    border: "1px solid white",
+    width: "45vw",
+    height: "30vw",
+    overflow: "hidden",
+  },
 
   displayName: {
     position: "absolute",
@@ -45,14 +51,9 @@ const StyledVideoPlayer = styled("video")(({ theme }) => ({
   transform: "rotateY(180deg)",
   objectFit: "cover",
   objectPosition: "center",
-  width: "45vw",
-  height: "30vw",
+  width: "100%",
+  height: "100%",
   background: "#6D6D6D",
-
-  "@media (max-width: 960px)": {
-    width: "90vw",
-    height: "auto",
-  },
 }));
 
 interface VideoPlayerProps {
@@ -76,7 +77,13 @@ interface MicAndVideoProps {
   updateVideo?: () => void;
 }
 
-export const MicAndVideo = ({ updateMic, updateVideo, disableMicAndVideoBtn, audioBool = false, videoBool = false }: MicAndVideoProps) => {
+export const MicAndVideo = ({
+  updateMic,
+  updateVideo,
+  disableMicAndVideoBtn,
+  audioBool = false,
+  videoBool = false,
+}: MicAndVideoProps) => {
   const classes = useStyles();
 
   return (

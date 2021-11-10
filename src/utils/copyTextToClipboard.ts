@@ -1,6 +1,6 @@
-export const copyTextToClipboard = (ref: HTMLInputElement) => {
+export const copyTextToClipboard = (ref: any) => {
   /* Get the text field */
-  var copyText = ref;
+  var copyText = ref.current;
   /* Select the text field */
 
   copyText.select();

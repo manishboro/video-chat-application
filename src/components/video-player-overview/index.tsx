@@ -10,13 +10,14 @@ import VideoCameraFrontIcon from "@mui/icons-material/VideoCameraFront";
 import KeyboardIcon from "@mui/icons-material/Keyboard";
 import MenuIcon from "@mui/icons-material/Menu";
 
-import { firebaseConfig, servers } from "./config";
 import CustomButton from "../../utility-components/CustomButton";
 import VideoPlayer, { MicAndVideo } from "../video-player";
+import JoinMeetingForm from "../join-meeting-form";
+import RoomIDForm from "../room-id-form";
+import { firebaseConfig, servers } from "./config";
 import { useUserContext } from "../../context/UserContext";
 import { useAlertContext } from "../../context/AlertContext";
 import { useModalContext } from "../../context/ModalContext";
-import JoinMeetingForm from "../join-meeting-form";
 
 let app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
@@ -31,13 +32,13 @@ export default function VideoPlayerOverview() {
   const alert = useAlertContext();
   const modal = useModalContext();
 
+  React.useEffect(() => {}, []);
+
   const [roomId, setRoomId] = React.useState("");
   const [remoteUserDisplayName, setRemoteUserDisplayName] = React.useState("");
   const [isCameraOn, setIsCameraOn] = React.useState(false);
   // This state has to be common across local and remote connection
   const [isCallAccepted, setIsCallAccepted] = React.useState(false);
-
-  console.log(roomId);
 
   // Create refs to store the local and remote stream
   const localStreamRef = React.useRef<HTMLVideoElement | null>(null);
@@ -62,17 +63,15 @@ export default function VideoPlayerOverview() {
 
       setIsCameraOn(true);
     } catch (err: any) {
-      alert?.handleAlertProps("severity", "warning");
-      alert?.handleAlertProps("showAlert", true);
-      alert?.handleSnackbar(err.message);
+      alert?.setStateSnackbarContext(err.message, "warning");
     }
   };
 
   const startCall = async () => {
     try {
       const newDocRef = doc(firestore, "calls_2", nanoid());
-      const offerCandidatesCollectionRef = collection(firestore, "calls_2", newDocRef.id, "offerCandidates"); // collection ref
 
+      const offerCandidatesCollectionRef = collection(firestore, "calls_2", newDocRef.id, "offerCandidates"); // collection ref
       const answerCandidatesCollectionRef = collection(firestore, "calls_2", newDocRef.id, "answerCandidates"); // collection ref
 
       // Get ICE candidates for caller, save to db
@@ -116,14 +115,18 @@ export default function VideoPlayerOverview() {
 
       // Set the docId as the roomId for future reference
       setRoomId(newDocRef.id);
+
+      openModal(RoomIDForm, { roomId: newDocRef.id });
     } catch (err: any) {
-      alert?.handleAlertProps("severity", "warning");
-      alert?.handleAlertProps("showAlert", true);
-      alert?.handleSnackbar(err.message);
+      // alert?.handleAlertProps("severity", "warning");
+      // alert?.handleAlertProps("showAlert", true);
+      // alert?.handleSnackbar(err.message);
+      alert?.setStateSnackbarContext(err.message, "warning");
     } finally {
-      alert?.handleAlertProps("severity", "success");
-      alert?.handleAlertProps("showAlert", true);
-      alert?.handleSnackbar("Meeting created");
+      // alert?.handleAlertProps("severity", "success");
+      // alert?.handleAlertProps("showAlert", true);
+      // alert?.handleSnackbar("Meeting created");
+      alert?.setStateSnackbarContext("Meeting created", "success");
     }
   };
 
@@ -166,16 +169,16 @@ export default function VideoPlayerOverview() {
         });
       });
     } catch (err: any) {
-      alert?.handleAlertProps("severity", "warning");
-      alert?.handleAlertProps("showAlert", true);
-      alert?.handleSnackbar(err.message);
+      alert?.setStateSnackbarContext(err.message, "warning");
     }
   };
 
-  const openModal = () => {
+  const openModal = (Component: React.ElementType, otherProps?: object) => {
     modal?.handleOpen();
-    modal?.setComponent(<JoinMeetingForm handleClose={modal?.handleClose} answerCall={answerCall} alert={alert} />);
+    modal?.setComponent(<Component handleClose={modal?.handleClose} alert={alert} {...otherProps} />);
   };
+
+  console.log(roomId);
 
   return (
     <>
@@ -204,13 +207,18 @@ export default function VideoPlayerOverview() {
             <>
               <CustomButton
                 text="Create Meeting"
-                fn={startCall}
                 Icon={VideoCameraFrontIcon}
                 IconDirection="left"
                 rootStyles={{ marginRight: "1rem" }}
+                fn={() => startCall()}
               />
 
-              <CustomButton text="Join Meeting" Icon={KeyboardIcon} IconDirection="left" fn={openModal} />
+              <CustomButton
+                text="Join Meeting"
+                Icon={KeyboardIcon}
+                IconDirection="left"
+                fn={() => openModal(JoinMeetingForm, { answerCall })}
+              />
             </>
           )}
         </Box>

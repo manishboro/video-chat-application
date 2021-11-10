@@ -18,10 +18,10 @@ ReactDOM.render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <Router>
-        <CssBaseline />
         <AlertContextProvider>
           <ModalContextProvider>
             <UserContextProvider>
+              <CssBaseline />
               <App />
             </UserContextProvider>
           </ModalContextProvider>

@@ -4,12 +4,12 @@ import { Box } from "@mui/system";
 
 import CustomButton from "../../utility-components/CustomButton";
 import CustomTextField from "../../utility-components/CustomTextField";
-import { AlertContextInterface } from "../../context/AlertContext";
+import { SnackbarContextTypes } from "../../context/AlertContext";
 
 interface JoinMeetingFormProps {
   handleClose(): void;
   answerCall(id: string): void;
-  alert: AlertContextInterface | null;
+  alert: SnackbarContextTypes | null;
 }
 
 const JoinMeetingForm: React.FC<JoinMeetingFormProps> = ({ handleClose, answerCall, alert }) => {
@@ -33,13 +33,16 @@ const JoinMeetingForm: React.FC<JoinMeetingFormProps> = ({ handleClose, answerCa
       onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         answerCall(roomId);
-        alert?.handleAlertProps("severity", "success");
-        alert?.handleAlertProps("showAlert", true);
-        alert?.handleSnackbar("Meeting joined");
+        alert?.setStateSnackbarContext("Meeting joined", "success");
         handleClose();
       }}
     >
-      <CustomTextField id="personToCall" label="Enter room ID" value={roomId} handleChange={(e) => setIDToCall(e.target.value)} />
+      <CustomTextField
+        id="personToCall"
+        label="Enter room ID"
+        value={roomId}
+        handleChange={(e) => setIDToCall(e.target.value)}
+      />
 
       <CustomButton text="Join" rootStyles={{ marginTop: "1rem" }} type="submit" />
     </Box>
