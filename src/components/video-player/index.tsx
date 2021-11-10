@@ -127,8 +127,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 }) => {
   const classes = useStyles();
 
-  console.log("hello", audioBool, videoBool);
-
   return (
     <div className={classes.root} style={{ display: isVisible ? "block" : "none" }}>
       <StyledVideoPlayer playsInline muted={muted} ref={videoRef} autoPlay />

@@ -209,7 +209,7 @@ export default function VideoPlayerOverview() {
     if (myStream) {
       myStream.getAudioTracks()[0].enabled = !userCtx?.audioOnBool;
       userCtx?.setAudioOnBool(!userCtx?.audioOnBool);
-      setItemToStorage("audioOnBool", new Boolean(!userCtx?.audioOnBool).toString());
+      setItemToStorage("audioOnBool", Boolean(!userCtx?.audioOnBool).toString());
 
       let type = query.get("type");
 
@@ -227,11 +227,9 @@ export default function VideoPlayerOverview() {
     if (myStream) {
       myStream.getVideoTracks()[0].enabled = !userCtx?.videoOnBool;
       userCtx?.setVideoOnBool(!userCtx?.videoOnBool);
-      setItemToStorage("videoOnBool", new Boolean(!userCtx?.videoOnBool).toString());
+      setItemToStorage("videoOnBool", Boolean(!userCtx?.videoOnBool).toString());
 
       let type = query.get("type");
-
-      console.log(type);
 
       if (roomId && type) {
         let userVideo =
@@ -255,6 +253,7 @@ export default function VideoPlayerOverview() {
       myStream.getAudioTracks()[0].enabled = userCtx?.audioOnBool === undefined ? false : userCtx?.audioOnBool;
       myStream.getVideoTracks()[0].enabled = userCtx?.videoOnBool === undefined ? false : userCtx?.videoOnBool;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myStream]);
 
   return (
