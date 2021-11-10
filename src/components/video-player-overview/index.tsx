@@ -1,5 +1,6 @@
 import React from "react";
 import { nanoid } from "nanoid";
+import { useHistory } from "react-router";
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, doc, setDoc, addDoc, onSnapshot, getDoc, updateDoc } from "firebase/firestore";
 
@@ -14,6 +15,7 @@ import CustomButton from "../../utility-components/CustomButton";
 import VideoPlayer, { MicAndVideo } from "../video-player";
 import JoinMeetingForm from "../join-meeting-form";
 import RoomIDForm from "../room-id-form";
+import useQuery from "../../hooks/useQuery";
 import { firebaseConfig, servers } from "./config";
 import { useUserContext } from "../../context/UserContext";
 import { useAlertContext } from "../../context/AlertContext";
@@ -29,17 +31,19 @@ let localStream: MediaStream;
 let remoteStream: MediaStream;
 
 export default function VideoPlayerOverview() {
+  const history = useHistory();
   const userCtx = useUserContext();
   const alert = useAlertContext();
   const modal = useModalContext();
+  const query = useQuery();
 
   const [roomId, setRoomId] = React.useState("");
   const [remoteUserDisplayName, setRemoteUserDisplayName] = React.useState("");
   const [myStream, setMyStream] = React.useState<MediaStream | null>(null);
+  const [remoteAudio, setRemoteAudio] = React.useState<boolean | undefined>(undefined);
+  const [remoteVideo, setRemoteVideo] = React.useState<boolean | undefined>(undefined);
   const [isCameraOn, setIsCameraOn] = React.useState(false);
   const [isCallAccepted, setIsCallAccepted] = React.useState(false); // This state has to be common across local and remote connection
-
-  console.log(roomId);
 
   // Create refs to store the local and remote stream
   const localStreamRef = React.useRef<HTMLVideoElement | null>(null);
@@ -88,14 +92,22 @@ export default function VideoPlayerOverview() {
       const offer = { sdp: offerDescription.sdp, type: offerDescription.type };
 
       // Store offer and callerName in the specified document
-      await setDoc(newDocRef, { offer, callerName: userCtx?.displayName });
+      await setDoc(newDocRef, {
+        offer,
+        callerName: userCtx?.displayName,
+        callerAudio: userCtx?.audioOnBool,
+        callerVideo: userCtx?.videoOnBool,
+      });
 
       // Attach listeners to look for any changes in the document
       onSnapshot(newDocRef, (docSnapshot) => {
         if (docSnapshot.exists()) {
           const docData = docSnapshot.data();
+
           setRemoteUserDisplayName(docData.receiverName);
           setIsCallAccepted(docData.isCallAccepted ?? false);
+          setRemoteAudio(docData.receiverAudio);
+          setRemoteVideo(docData.receiverVideo);
 
           // Save answer description as remote description
           if (!pc.currentRemoteDescription && docData?.answer) {
@@ -119,6 +131,8 @@ export default function VideoPlayerOverview() {
 
       // Set the docId as the roomId for future reference
       setRoomId(newDocRef.id);
+
+      history.push("/?type=c");
     } catch (err: any) {
       alert?.setStateSnackbarContext(err.message, "warning");
     } finally {
@@ -128,6 +142,8 @@ export default function VideoPlayerOverview() {
 
   const answerCall = async (roomId: string) => {
     try {
+      setRoomId(roomId);
+
       const offerCandidatesCollectionRef = collection(firestore, "calls_2", roomId, "offerCandidates"); // collection ref
       const answerCandidatesCollectionRef = collection(firestore, "calls_2", roomId, "answerCandidates"); // collection ref
 
@@ -142,9 +158,9 @@ export default function VideoPlayerOverview() {
 
       if (docSnapshot.exists()) {
         const docData = docSnapshot.data();
-        setRemoteUserDisplayName(docData.callerName);
+
         const offerDescription = new RTCSessionDescription(docData.offer);
-        await pc.setRemoteDescription(offerDescription);
+        pc.setRemoteDescription(offerDescription);
       }
 
       // Create answer
@@ -152,8 +168,26 @@ export default function VideoPlayerOverview() {
       await pc.setLocalDescription(answerDescription);
       const answer = { type: answerDescription.type, sdp: answerDescription.sdp };
 
-      await updateDoc(docRef, { answer, receiverName: userCtx?.displayName, isCallAccepted: true });
+      await updateDoc(docRef, {
+        answer,
+        receiverName: userCtx?.displayName,
+        isCallAccepted: true,
+        receiverAudio: userCtx?.audioOnBool,
+        receiverVideo: userCtx?.videoOnBool,
+      });
+
       setIsCallAccepted(true);
+
+      // Attach listeners to look for any changes in the document
+      onSnapshot(docRef, (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const docData = docSnapshot.data();
+
+          setRemoteUserDisplayName(docData.callerName);
+          setRemoteAudio(docData.callerAudio);
+          setRemoteVideo(docData.callerVideo);
+        }
+      });
 
       // Attach listeners to look for any changes in the collection
       onSnapshot(offerCandidatesCollectionRef, (collectionSnapshot) => {
@@ -164,24 +198,48 @@ export default function VideoPlayerOverview() {
           }
         });
       });
+
+      history.push("/?type=r");
     } catch (err: any) {
       alert?.setStateSnackbarContext(err.message, "warning");
     }
   };
 
-  const updateAudio = () => {
+  const updateAudio = async () => {
     if (myStream) {
       myStream.getAudioTracks()[0].enabled = !userCtx?.audioOnBool;
       userCtx?.setAudioOnBool(!userCtx?.audioOnBool);
       setItemToStorage("audioOnBool", new Boolean(!userCtx?.audioOnBool).toString());
+
+      let type = query.get("type");
+
+      if (roomId && type) {
+        let userAudio =
+          type === "c" ? { callerAudio: !userCtx?.audioOnBool } : { receiverAudio: !userCtx?.audioOnBool };
+
+        const docRef = doc(firestore, "calls_2", roomId);
+        await updateDoc(docRef, userAudio);
+      }
     }
   };
 
-  const updateVideo = () => {
+  const updateVideo = async () => {
     if (myStream) {
       myStream.getVideoTracks()[0].enabled = !userCtx?.videoOnBool;
       userCtx?.setVideoOnBool(!userCtx?.videoOnBool);
       setItemToStorage("videoOnBool", new Boolean(!userCtx?.videoOnBool).toString());
+
+      let type = query.get("type");
+
+      console.log(type);
+
+      if (roomId && type) {
+        let userVideo =
+          type === "c" ? { callerVideo: !userCtx?.videoOnBool } : { receiverVideo: !userCtx?.videoOnBool };
+
+        const docRef = doc(firestore, "calls_2", roomId);
+        await updateDoc(docRef, userVideo);
+      }
     }
   };
 
@@ -191,6 +249,8 @@ export default function VideoPlayerOverview() {
   };
 
   React.useEffect(() => {
+    history.push("/");
+
     if (myStream) {
       myStream.getAudioTracks()[0].enabled = userCtx?.audioOnBool === undefined ? false : userCtx?.audioOnBool;
       myStream.getVideoTracks()[0].enabled = userCtx?.videoOnBool === undefined ? false : userCtx?.videoOnBool;
@@ -256,6 +316,8 @@ export default function VideoPlayerOverview() {
             displayName={remoteUserDisplayName}
             muted={false}
             isVisible={isCallAccepted}
+            audioBool={remoteAudio}
+            videoBool={remoteVideo}
             showMicAndVideo={true}
             disableMicAndVideoBtn={true}
           />
