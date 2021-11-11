@@ -41,8 +41,8 @@ const firestore = getFirestore(app);
 const pc = new RTCPeerConnection(servers);
 let localStream: MediaStream;
 let remoteStream: MediaStream;
-let docRefListener: Unsubscribe | (() => void) = () => console.log("unmounting");
-let collectionRefListener: Unsubscribe | (() => void) = () => console.log("unmounting");
+let docRefListener: Unsubscribe | (() => void) = () => console.log("removing doc listener");
+let collectionRefListener: Unsubscribe | (() => void) = () => console.log("removing collection listener");
 
 export default function VideoPlayerOverview() {
   const history = useHistory();
