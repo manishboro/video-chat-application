@@ -10,6 +10,7 @@ interface UserContextInterface {
   setDisplayName: React.Dispatch<React.SetStateAction<string>>;
   setAudioOnBool: React.Dispatch<React.SetStateAction<boolean>>;
   setVideoOnBool: React.Dispatch<React.SetStateAction<boolean>>;
+  setTrigger: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const UserCtx = React.createContext<UserContextInterface | null>(null);
@@ -46,6 +47,7 @@ const UserContextProvider: React.FC = ({ children }) => {
         setDisplayName,
         setAudioOnBool,
         setVideoOnBool,
+        setTrigger,
       }}
     >
       {displayName ? children : <EnterNameForm setTrigger={setTrigger} />}

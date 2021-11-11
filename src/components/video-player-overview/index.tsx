@@ -5,11 +5,11 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, collection, doc, setDoc, addDoc, onSnapshot, getDoc, updateDoc } from "firebase/firestore";
 
 import { Box } from "@mui/system";
-import { Alert, IconButton, Modal } from "@mui/material";
+import { Alert, Modal, useMediaQuery } from "@mui/material";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import VideoCameraFrontIcon from "@mui/icons-material/VideoCameraFront";
 import KeyboardIcon from "@mui/icons-material/Keyboard";
-import MenuIcon from "@mui/icons-material/Menu";
+import EditIcon from "@mui/icons-material/Edit";
 
 import CustomButton from "../../utility-components/CustomButton";
 import VideoPlayer, { MicAndVideo } from "../video-player";
@@ -21,6 +21,8 @@ import { useUserContext } from "../../context/UserContext";
 import { useAlertContext } from "../../context/AlertContext";
 import { useModalContext } from "../../context/ModalContext";
 import { setItemToStorage } from "../../utils/localStorage";
+import Sidebar from "../sidebar";
+import EnterNameForm from "../enter-name-form";
 
 let app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
@@ -36,6 +38,8 @@ export default function VideoPlayerOverview() {
   const alert = useAlertContext();
   const modal = useModalContext();
   const query = useQuery();
+
+  const matches_620px = useMediaQuery("(max-width: 620px)");
 
   const [roomId, setRoomId] = React.useState("");
   const [remoteUserDisplayName, setRemoteUserDisplayName] = React.useState("");
@@ -272,7 +276,7 @@ export default function VideoPlayerOverview() {
           flexDirection: "column",
         }}
       >
-        {!isCallAccepted && (
+        {matches_620px ? null : isCallAccepted ? null : (
           <Box
             sx={{
               height: "100px",
@@ -306,7 +310,7 @@ export default function VideoPlayerOverview() {
 
         <Box
           sx={{
-            height: `calc(100vh - ${!isCallAccepted ? "200px" : "100px"})`,
+            height: `calc(100vh - ${matches_620px ? "100px" : isCallAccepted ? "100px" : "200px"})`,
             width: "100vw",
             display: "flex",
             alignItems: "center",
@@ -355,9 +359,33 @@ export default function VideoPlayerOverview() {
       </Box>
 
       {isCameraOn && (
-        <IconButton sx={{ position: "absolute", top: "1rem", right: "1rem" }}>
-          <MenuIcon sx={{ color: "white", fontSize: "2.5rem" }} />
-        </IconButton>
+        <Sidebar
+          items={[
+            {
+              name: "Create Meeting",
+              button: true,
+              Icon: VideoCameraFrontIcon,
+              onClick: startCall,
+            },
+            {
+              name: "Join Meeting",
+              button: true,
+              Icon: KeyboardIcon,
+              onClick: () => openModal(JoinMeetingForm, { answerCall }),
+            },
+            {
+              name: "Edit display name",
+              button: true,
+              Icon: EditIcon,
+              onClick: () =>
+                openModal(EnterNameForm, {
+                  setTrigger: userCtx?.setTrigger,
+                  showAlert: false,
+                  message: "Display name changed successfully",
+                }),
+            },
+          ]}
+        />
       )}
 
       <Modal open={!isCameraOn} sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>

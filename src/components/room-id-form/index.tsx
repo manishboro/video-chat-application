@@ -32,6 +32,8 @@ const RoomIDForm: React.FC<JoinMeetingFormProps> = ({ handleClose, alert, roomId
         borderRadius: "1rem",
         textAlign: "center",
         backgroundColor: "white",
+
+        "@media (max-width: 530px)": { width: "95vw" },
       }}
     >
       <CustomTextField id="personToCall" label="Room ID" value={roomId} disabled={true} customRef={roomIdRef} />

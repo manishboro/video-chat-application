@@ -29,6 +29,8 @@ const JoinMeetingForm: React.FC<JoinMeetingFormProps> = ({ handleClose, answerCa
         borderRadius: "1rem",
         textAlign: "center",
         backgroundColor: "white",
+
+        "@media (max-width: 530px)": { width: "95vw" },
       }}
       onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
