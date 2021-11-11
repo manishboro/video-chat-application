@@ -2,7 +2,17 @@ import React from "react";
 import { nanoid } from "nanoid";
 import { useHistory } from "react-router";
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, doc, setDoc, addDoc, onSnapshot, getDoc, updateDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  doc,
+  setDoc,
+  addDoc,
+  onSnapshot,
+  getDoc,
+  updateDoc,
+  Unsubscribe,
+} from "firebase/firestore";
 
 import { Box } from "@mui/system";
 import { Alert, Modal, useMediaQuery } from "@mui/material";
@@ -16,13 +26,13 @@ import VideoPlayer, { MicAndVideo } from "../video-player";
 import JoinMeetingForm from "../join-meeting-form";
 import RoomIDForm from "../room-id-form";
 import useQuery from "../../hooks/useQuery";
+import Sidebar from "../sidebar";
+import EnterNameForm from "../enter-name-form";
 import { firebaseConfig, servers } from "./config";
 import { useUserContext } from "../../context/UserContext";
 import { useAlertContext } from "../../context/AlertContext";
 import { useModalContext } from "../../context/ModalContext";
 import { setItemToStorage } from "../../utils/localStorage";
-import Sidebar from "../sidebar";
-import EnterNameForm from "../enter-name-form";
 
 let app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
@@ -31,6 +41,8 @@ const firestore = getFirestore(app);
 const pc = new RTCPeerConnection(servers);
 let localStream: MediaStream;
 let remoteStream: MediaStream;
+let docRefListener: Unsubscribe | (() => void) = () => console.log("unmounting");
+let collectionRefListener: Unsubscribe | (() => void) = () => console.log("unmounting");
 
 export default function VideoPlayerOverview() {
   const history = useHistory();
@@ -47,7 +59,7 @@ export default function VideoPlayerOverview() {
   const [remoteAudio, setRemoteAudio] = React.useState<boolean | undefined>(undefined);
   const [remoteVideo, setRemoteVideo] = React.useState<boolean | undefined>(undefined);
   const [isCameraOn, setIsCameraOn] = React.useState(false);
-  const [isCallAccepted, setIsCallAccepted] = React.useState(false); // This state has to be common across local and remote connection
+  const [isPeersConnected, setPeersConnected] = React.useState(false); // This state has to be common across local and remote connection
 
   // Create refs to store the local and remote stream
   const localStreamRef = React.useRef<HTMLVideoElement | null>(null);
@@ -104,12 +116,12 @@ export default function VideoPlayerOverview() {
       });
 
       // Attach listeners to look for any changes in the document
-      onSnapshot(newDocRef, (docSnapshot) => {
+      docRefListener = onSnapshot(newDocRef, (docSnapshot) => {
         if (docSnapshot.exists()) {
           const docData = docSnapshot.data();
 
           setRemoteUserDisplayName(docData.receiverName);
-          setIsCallAccepted(docData.isCallAccepted ?? false);
+          // setIsCallAccepted(docData.isCallAccepted ?? false);
           setRemoteAudio(docData.receiverAudio);
           setRemoteVideo(docData.receiverVideo);
 
@@ -122,7 +134,7 @@ export default function VideoPlayerOverview() {
       });
 
       // Attach listeners to look for any changes in the collection
-      onSnapshot(answerCandidatesCollectionRef, (collectionSnapshot) => {
+      collectionRefListener = onSnapshot(answerCandidatesCollectionRef, (collectionSnapshot) => {
         collectionSnapshot.docChanges().forEach((change) => {
           if (change.type === "added") {
             const candidate = new RTCIceCandidate(change.doc.data());
@@ -175,15 +187,15 @@ export default function VideoPlayerOverview() {
       await updateDoc(docRef, {
         answer,
         receiverName: userCtx?.displayName,
-        isCallAccepted: true,
+        // isCallAccepted: true,
         receiverAudio: userCtx?.audioOnBool,
         receiverVideo: userCtx?.videoOnBool,
       });
 
-      setIsCallAccepted(true);
+      // setIsCallAccepted(true);
 
       // Attach listeners to look for any changes in the document
-      onSnapshot(docRef, (docSnapshot) => {
+      docRefListener = onSnapshot(docRef, (docSnapshot) => {
         if (docSnapshot.exists()) {
           const docData = docSnapshot.data();
 
@@ -194,7 +206,7 @@ export default function VideoPlayerOverview() {
       });
 
       // Attach listeners to look for any changes in the collection
-      onSnapshot(offerCandidatesCollectionRef, (collectionSnapshot) => {
+      collectionRefListener = onSnapshot(offerCandidatesCollectionRef, (collectionSnapshot) => {
         collectionSnapshot.docChanges().forEach((change) => {
           if (change.type === "added") {
             const candidate = new RTCIceCandidate(change.doc.data());
@@ -245,7 +257,9 @@ export default function VideoPlayerOverview() {
     }
   };
 
-  // const disconnectCall = async () => {};
+  // const disconnectCall = async () => {
+  //   pc.close();
+  // };
 
   const openModal = (Component: React.ElementType, otherProps?: object) => {
     modal?.handleOpen();
@@ -255,10 +269,23 @@ export default function VideoPlayerOverview() {
   React.useEffect(() => {
     history.push("/");
 
+    // Listen for connectionstatechange on the local RTCPeerConnection
+    pc.addEventListener("connectionstatechange", () => {
+      if (pc.connectionState === "connected") {
+        console.log("Peers connected!");
+        setPeersConnected(true);
+      }
+    });
+
     if (myStream) {
       myStream.getAudioTracks()[0].enabled = userCtx?.audioOnBool === undefined ? false : userCtx?.audioOnBool;
       myStream.getVideoTracks()[0].enabled = userCtx?.videoOnBool === undefined ? false : userCtx?.videoOnBool;
     }
+
+    return () => {
+      docRefListener();
+      collectionRefListener();
+    };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myStream]);
@@ -276,7 +303,7 @@ export default function VideoPlayerOverview() {
           flexDirection: "column",
         }}
       >
-        {matches_620px ? null : isCallAccepted ? null : (
+        {matches_620px ? null : isPeersConnected ? null : (
           <Box
             sx={{
               height: "100px",
@@ -310,7 +337,7 @@ export default function VideoPlayerOverview() {
 
         <Box
           sx={{
-            height: `calc(100vh - ${matches_620px ? "100px" : isCallAccepted ? "100px" : "200px"})`,
+            height: `calc(100vh - ${matches_620px ? "100px" : isPeersConnected ? "100px" : "200px"})`,
             width: "100vw",
             display: "flex",
             alignItems: "center",
@@ -329,7 +356,7 @@ export default function VideoPlayerOverview() {
             videoRef={remoteStreamRef}
             displayName={remoteUserDisplayName}
             muted={false}
-            isVisible={isCallAccepted}
+            isVisible={isPeersConnected}
             audioBool={remoteAudio}
             videoBool={remoteVideo}
             showMicAndVideo={true}
