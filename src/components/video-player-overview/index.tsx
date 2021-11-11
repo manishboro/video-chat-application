@@ -245,7 +245,7 @@ export default function VideoPlayerOverview() {
     }
   };
 
-  const disconnectCall = async () => {};
+  // const disconnectCall = async () => {};
 
   const openModal = (Component: React.ElementType, otherProps?: object) => {
     modal?.handleOpen();
