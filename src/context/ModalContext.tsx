@@ -41,8 +41,18 @@ const ModalContextProvider: React.FC = ({ children }) => {
       >
         <Fade in={open}>
           <div>
-            <IconButton style={{ position: "absolute", top: "2rem", right: "2rem", border: "1px solid white" }} onClick={handleClose}>
-              <CloseIcon style={{ color: "white" }} />
+            <IconButton
+              sx={{
+                position: "absolute",
+                top: "2rem",
+                right: "2rem",
+                backgroundColor: "white",
+
+                "&:hover": { backgroundColor: "white" },
+              }}
+              onClick={handleClose}
+            >
+              <CloseIcon sx={{ color: "red" }} />
             </IconButton>
             {Component}
           </div>

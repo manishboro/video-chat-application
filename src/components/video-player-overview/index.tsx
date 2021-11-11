@@ -241,6 +241,8 @@ export default function VideoPlayerOverview() {
     }
   };
 
+  const disconnectCall = async () => {};
+
   const openModal = (Component: React.ElementType, otherProps?: object) => {
     modal?.handleOpen();
     modal?.setComponent(<Component handleClose={modal?.handleClose} alert={alert} {...otherProps} />);
@@ -253,6 +255,7 @@ export default function VideoPlayerOverview() {
       myStream.getAudioTracks()[0].enabled = userCtx?.audioOnBool === undefined ? false : userCtx?.audioOnBool;
       myStream.getVideoTracks()[0].enabled = userCtx?.videoOnBool === undefined ? false : userCtx?.videoOnBool;
     }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myStream]);
 
@@ -269,43 +272,51 @@ export default function VideoPlayerOverview() {
           flexDirection: "column",
         }}
       >
+        {!isCallAccepted && (
+          <Box
+            sx={{
+              height: "100px",
+              width: "100%",
+              padding: "0 2rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {isCameraOn && (
+              <>
+                <CustomButton
+                  text="Create Meeting"
+                  Icon={VideoCameraFrontIcon}
+                  IconDirection="left"
+                  rootStyles={{ marginRight: "1rem" }}
+                  fn={() => startCall()}
+                />
+
+                <CustomButton
+                  text="Join Meeting"
+                  Icon={KeyboardIcon}
+                  IconDirection="left"
+                  fn={() => openModal(JoinMeetingForm, { answerCall })}
+                />
+              </>
+            )}
+          </Box>
+        )}
+
         <Box
           sx={{
-            height: "100px",
-            width: "100%",
-            padding: "0 2rem",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {isCameraOn && (
-            <>
-              <CustomButton
-                text="Create Meeting"
-                Icon={VideoCameraFrontIcon}
-                IconDirection="left"
-                rootStyles={{ marginRight: "1rem" }}
-                fn={() => startCall()}
-              />
-
-              <CustomButton
-                text="Join Meeting"
-                Icon={KeyboardIcon}
-                IconDirection="left"
-                fn={() => openModal(JoinMeetingForm, { answerCall })}
-              />
-            </>
-          )}
-        </Box>
-
-        <Box
-          sx={{
-            height: "calc(100vh - 200px)",
+            height: `calc(100vh - ${!isCallAccepted ? "200px" : "100px"})`,
             width: "100vw",
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-evenly",
+            justifyContent: "center",
+
+            "& > div:not(:last-child)": { margin: ".5rem" },
+
+            "@media (max-width: 960px)": {
+              flexDirection: "column",
+            },
           }}
         >
           <VideoPlayer videoRef={localStreamRef} displayName={userCtx?.displayName} muted={true} />
