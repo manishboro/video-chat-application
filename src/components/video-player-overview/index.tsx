@@ -70,9 +70,9 @@ export default function VideoPlayerOverview() {
   const localStreamRef = React.useRef<HTMLVideoElement | null>(null);
   const remoteStreamRef = React.useRef<HTMLVideoElement | null>(null);
 
-  const openCamera = async () => {
+  const openCamera = async (auto?: boolean) => {
     try {
-      history.push("/"); // Reset URL
+      if (!auto) history.push("/"); // Reset URL
 
       localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       remoteStream = new MediaStream();
@@ -304,7 +304,7 @@ export default function VideoPlayerOverview() {
     let mode = query.get("mode");
 
     if (type === "r" && id && mode === "auto") {
-      openCamera();
+      openCamera(true);
       answerCall(id, true);
     }
 
