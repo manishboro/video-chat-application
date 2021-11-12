@@ -319,6 +319,11 @@ export default function VideoPlayerOverview() {
 
       if (["disconnected", "closed", "failed"].includes(pc.connectionState)) {
         setPeersConnected(false);
+
+        // Remove firebase listeners
+        docRefListener();
+        collectionRefListener();
+
         history.push("/");
         window.location.reload();
 
