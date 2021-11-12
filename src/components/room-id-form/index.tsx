@@ -52,7 +52,7 @@ const RoomIDForm: React.FC<JoinMeetingFormProps> = ({ handleClose, alert, roomId
       <CustomTextField
         id="personToCall"
         label="Room URL"
-        value={`${window.location.protocol}//${window.location.host}/?type=r&id=${roomId}`}
+        value={`${window.location.protocol}//${window.location.host}/?type=r&id=${roomId}&mode=auto`}
         disabled={true}
         customRef={roomURLRef}
       />

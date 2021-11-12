@@ -12,6 +12,7 @@ import {
   getDoc,
   updateDoc,
   Unsubscribe,
+  connectFirestoreEmulator,
 } from "firebase/firestore";
 
 import { Box } from "@mui/system";
@@ -37,6 +38,7 @@ import { setItemToStorage } from "../../utils/localStorage";
 
 let app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
+if (window.location.hostname === "localhost") connectFirestoreEmulator(firestore, "localhost", 6001);
 
 // Global State
 const pc = new RTCPeerConnection(servers);
@@ -54,6 +56,8 @@ export default function VideoPlayerOverview() {
 
   const matches_620px = useMediaQuery("(max-width: 620px)");
 
+  const [isInfoAlert, setIsInfoAlert] = React.useState(true);
+
   const [roomId, setRoomId] = React.useState("");
   const [remoteUserDisplayName, setRemoteUserDisplayName] = React.useState("");
   const [myStream, setMyStream] = React.useState<MediaStream | null>(null);
@@ -68,7 +72,7 @@ export default function VideoPlayerOverview() {
 
   const openCamera = async () => {
     try {
-      // history.push("/"); // Reset URL
+      history.push("/"); // Reset URL
 
       localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       remoteStream = new MediaStream();
@@ -159,7 +163,7 @@ export default function VideoPlayerOverview() {
     }
   };
 
-  const answerCall = async (roomId: string) => {
+  const answerCall = async (roomId: string, auto?: boolean) => {
     try {
       setRoomId(roomId);
 
@@ -218,56 +222,76 @@ export default function VideoPlayerOverview() {
         });
       });
 
-      history.push(`/?type=r&id=${roomId}`);
+      // Only push if method is manual
+      if (!auto) history.push(`/?type=r&id=${roomId}`);
     } catch (err: any) {
       alert?.setStateSnackbarContext(err.message, "warning");
     }
   };
 
   const updateAudio = async () => {
-    if (myStream) {
-      myStream.getAudioTracks()[0].enabled = !userCtx?.audioOnBool;
-      userCtx?.setAudioOnBool(!userCtx?.audioOnBool);
-      setItemToStorage("audioOnBool", Boolean(!userCtx?.audioOnBool).toString());
+    try {
+      if (myStream) {
+        myStream.getAudioTracks()[0].enabled = !userCtx?.audioOnBool;
+        userCtx?.setAudioOnBool(!userCtx?.audioOnBool);
+        setItemToStorage("audioOnBool", Boolean(!userCtx?.audioOnBool).toString());
 
-      let type = query.get("type");
+        let type = query.get("type");
 
-      if (roomId && type) {
-        let userAudio =
-          type === "c" ? { callerAudio: !userCtx?.audioOnBool } : { receiverAudio: !userCtx?.audioOnBool };
+        if (roomId && type) {
+          let userAudio =
+            type === "c" ? { callerAudio: !userCtx?.audioOnBool } : { receiverAudio: !userCtx?.audioOnBool };
 
-        const docRef = doc(firestore, "calls_2", roomId);
-        await updateDoc(docRef, userAudio);
+          const docRef = doc(firestore, "calls_2", roomId);
+          await updateDoc(docRef, userAudio);
+        }
       }
+    } catch (err: any) {
+      alert?.setStateSnackbarContext(err.message, "warning");
     }
   };
 
   const updateVideo = async () => {
-    if (myStream) {
-      myStream.getVideoTracks()[0].enabled = !userCtx?.videoOnBool;
-      userCtx?.setVideoOnBool(!userCtx?.videoOnBool);
-      setItemToStorage("videoOnBool", Boolean(!userCtx?.videoOnBool).toString());
+    try {
+      if (myStream) {
+        myStream.getVideoTracks()[0].enabled = !userCtx?.videoOnBool;
+        userCtx?.setVideoOnBool(!userCtx?.videoOnBool);
+        setItemToStorage("videoOnBool", Boolean(!userCtx?.videoOnBool).toString());
 
-      let type = query.get("type");
+        let type = query.get("type");
 
-      if (roomId && type) {
-        let userVideo;
+        if (roomId && type) {
+          let userVideo;
 
-        if (type === "c") userVideo = { callerVideo: !userCtx?.videoOnBool };
-        else if (type === "r") userVideo = { receiverVideo: !userCtx?.videoOnBool };
-        else return;
+          if (type === "c") userVideo = { callerVideo: !userCtx?.videoOnBool };
+          else if (type === "r") userVideo = { receiverVideo: !userCtx?.videoOnBool };
+          else return;
 
-        const docRef = doc(firestore, "calls_2", roomId);
-        await updateDoc(docRef, userVideo);
+          const docRef = doc(firestore, "calls_2", roomId);
+          await updateDoc(docRef, userVideo);
+        }
       }
+    } catch (err: any) {
+      alert?.setStateSnackbarContext(err.message, "warning");
     }
   };
 
-  // const disconnectCall = async () => {
-  //   pc.close();
-  //   docRefListener();
-  //   collectionRefListener();
-  // };
+  const disconnectCall = async () => {
+    try {
+      pc.close();
+
+      setPeersConnected(false);
+
+      // Remove firebase listeners
+      docRefListener();
+      collectionRefListener();
+
+      history.push("/");
+      window.location.reload();
+    } catch (err: any) {
+      alert?.setStateSnackbarContext(err.message, "warning");
+    }
+  };
 
   const openModal = (Component: React.ElementType, otherProps?: object) => {
     modal?.handleOpen();
@@ -277,33 +301,32 @@ export default function VideoPlayerOverview() {
   React.useEffect(() => {
     let id = query.get("id");
     let type = query.get("type");
+    let mode = query.get("mode");
 
-    if (type === "c" && id) {
-      setIsCameraOn(true);
-      // openCamera();
-      startCall(id);
-    }
-
-    if (type === "r" && id) {
-      setIsCameraOn(true);
-      // openCamera();
-      answerCall(id);
+    if (type === "r" && id && mode === "auto") {
+      openCamera();
+      answerCall(id, true);
     }
 
     // Listen for connectionstatechange on the local RTCPeerConnection
     pc.addEventListener("connectionstatechange", () => {
       console.log(pc.connectionState);
+
       if (pc.connectionState === "connected") {
         console.log("Peers connected!");
         setPeersConnected(true);
       }
-    });
 
-    // Set the audio and video tracks to appropriate states using the values stored on localstorage
-    if (myStream) {
-      myStream.getAudioTracks()[0].enabled = userCtx?.audioOnBool === undefined ? false : userCtx?.audioOnBool;
-      myStream.getVideoTracks()[0].enabled = userCtx?.videoOnBool === undefined ? false : userCtx?.videoOnBool;
-    }
+      if (["disconnected", "closed", "failed"].includes(pc.connectionState)) {
+        setPeersConnected(false);
+        history.push("/");
+        window.location.reload();
+
+        /* 
+          pc.close(); // Throws error when used pc.close()
+        */
+      }
+    });
 
     // Clean up all listeners when component is unmounted
     return () => {
@@ -313,6 +336,16 @@ export default function VideoPlayerOverview() {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  React.useEffect(() => {
+    // Set the audio and video tracks to appropriate states using the values stored on localstorage
+    if (myStream) {
+      myStream.getAudioTracks()[0].enabled = userCtx?.audioOnBool === undefined ? false : userCtx?.audioOnBool;
+      myStream.getVideoTracks()[0].enabled = userCtx?.videoOnBool === undefined ? false : userCtx?.videoOnBool;
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myStream]);
 
   return (
     <>
@@ -327,7 +360,23 @@ export default function VideoPlayerOverview() {
           flexDirection: "column",
         }}
       >
-        {matches_620px ? null : isPeersConnected ? null : (
+        {matches_620px ? null : isPeersConnected ? (
+          isInfoAlert && (
+            <Alert
+              severity="info"
+              onClose={() => setIsInfoAlert(false)}
+              sx={{
+                position: "absolute",
+                top: "10px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                zIndex: 20000,
+              }}
+            >
+              Please do not refresh the page while on call to avoid disconnection
+            </Alert>
+          )
+        ) : (
           <Box
             sx={{
               height: "100px",
@@ -416,6 +465,7 @@ export default function VideoPlayerOverview() {
 
                     "&:hover": { backgroundColor: "red" },
                   }}
+                  onClick={disconnectCall}
                 >
                   <CallEndIcon sx={{ fontSize: "30px", color: "white" }} />
                 </IconButton>
