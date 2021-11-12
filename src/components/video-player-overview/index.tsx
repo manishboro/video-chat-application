@@ -15,11 +15,12 @@ import {
 } from "firebase/firestore";
 
 import { Box } from "@mui/system";
-import { Alert, Modal, useMediaQuery } from "@mui/material";
+import { Alert, IconButton, Modal, useMediaQuery } from "@mui/material";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import VideoCameraFrontIcon from "@mui/icons-material/VideoCameraFront";
 import KeyboardIcon from "@mui/icons-material/Keyboard";
 import EditIcon from "@mui/icons-material/Edit";
+import CallEndIcon from "@mui/icons-material/CallEnd";
 
 import CustomButton from "../../utility-components/CustomButton";
 import VideoPlayer, { MicAndVideo } from "../video-player";
@@ -41,8 +42,8 @@ const firestore = getFirestore(app);
 const pc = new RTCPeerConnection(servers);
 let localStream: MediaStream;
 let remoteStream: MediaStream;
-let docRefListener: Unsubscribe | (() => void) = () => console.log("removing doc listener");
-let collectionRefListener: Unsubscribe | (() => void) = () => console.log("removing collection listener");
+let docRefListener: Unsubscribe | (() => void) = () => null;
+let collectionRefListener: Unsubscribe | (() => void) = () => null;
 
 export default function VideoPlayerOverview() {
   const history = useHistory();
@@ -67,6 +68,8 @@ export default function VideoPlayerOverview() {
 
   const openCamera = async () => {
     try {
+      // history.push("/"); // Reset URL
+
       localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       remoteStream = new MediaStream();
 
@@ -89,12 +92,12 @@ export default function VideoPlayerOverview() {
     }
   };
 
-  const startCall = async () => {
+  const startCall = async (id?: string) => {
     try {
-      const newDocRef = doc(firestore, "calls_2", nanoid());
+      const docRef = doc(firestore, "calls_2", id ?? nanoid());
 
-      const offerCandidatesCollectionRef = collection(firestore, "calls_2", newDocRef.id, "offerCandidates"); // collection ref
-      const answerCandidatesCollectionRef = collection(firestore, "calls_2", newDocRef.id, "answerCandidates"); // collection ref
+      const offerCandidatesCollectionRef = collection(firestore, "calls_2", docRef.id, "offerCandidates"); // collection ref
+      const answerCandidatesCollectionRef = collection(firestore, "calls_2", docRef.id, "answerCandidates"); // collection ref
 
       // Get ICE candidates for caller, save to db
       // **The listener should be added before setting the offer
@@ -108,7 +111,7 @@ export default function VideoPlayerOverview() {
       const offer = { sdp: offerDescription.sdp, type: offerDescription.type };
 
       // Store offer and callerName in the specified document
-      await setDoc(newDocRef, {
+      await setDoc(docRef, {
         offer,
         callerName: userCtx?.displayName,
         callerAudio: userCtx?.audioOnBool,
@@ -116,7 +119,7 @@ export default function VideoPlayerOverview() {
       });
 
       // Attach listeners to look for any changes in the document
-      docRefListener = onSnapshot(newDocRef, (docSnapshot) => {
+      docRefListener = onSnapshot(docRef, (docSnapshot) => {
         if (docSnapshot.exists()) {
           const docData = docSnapshot.data();
 
@@ -143,16 +146,16 @@ export default function VideoPlayerOverview() {
         });
       });
 
-      openModal(RoomIDForm, { roomId: newDocRef.id });
-
       // Set the docId as the roomId for future reference
-      setRoomId(newDocRef.id);
+      setRoomId(docRef.id);
 
-      history.push("/?type=c");
+      history.push(`/?type=c&id=${docRef.id}`);
+
+      openModal(RoomIDForm, { roomId: docRef.id });
+
+      alert?.setStateSnackbarContext("Meeting created", "success");
     } catch (err: any) {
       alert?.setStateSnackbarContext(err.message, "warning");
-    } finally {
-      alert?.setStateSnackbarContext("Meeting created", "success");
     }
   };
 
@@ -215,7 +218,7 @@ export default function VideoPlayerOverview() {
         });
       });
 
-      history.push("/?type=r");
+      history.push(`/?type=r&id=${roomId}`);
     } catch (err: any) {
       alert?.setStateSnackbarContext(err.message, "warning");
     }
@@ -248,8 +251,11 @@ export default function VideoPlayerOverview() {
       let type = query.get("type");
 
       if (roomId && type) {
-        let userVideo =
-          type === "c" ? { callerVideo: !userCtx?.videoOnBool } : { receiverVideo: !userCtx?.videoOnBool };
+        let userVideo;
+
+        if (type === "c") userVideo = { callerVideo: !userCtx?.videoOnBool };
+        else if (type === "r") userVideo = { receiverVideo: !userCtx?.videoOnBool };
+        else return;
 
         const docRef = doc(firestore, "calls_2", roomId);
         await updateDoc(docRef, userVideo);
@@ -259,6 +265,8 @@ export default function VideoPlayerOverview() {
 
   // const disconnectCall = async () => {
   //   pc.close();
+  //   docRefListener();
+  //   collectionRefListener();
   // };
 
   const openModal = (Component: React.ElementType, otherProps?: object) => {
@@ -267,28 +275,44 @@ export default function VideoPlayerOverview() {
   };
 
   React.useEffect(() => {
-    history.push("/");
+    let id = query.get("id");
+    let type = query.get("type");
+
+    if (type === "c" && id) {
+      setIsCameraOn(true);
+      // openCamera();
+      startCall(id);
+    }
+
+    if (type === "r" && id) {
+      setIsCameraOn(true);
+      // openCamera();
+      answerCall(id);
+    }
 
     // Listen for connectionstatechange on the local RTCPeerConnection
     pc.addEventListener("connectionstatechange", () => {
+      console.log(pc.connectionState);
       if (pc.connectionState === "connected") {
         console.log("Peers connected!");
         setPeersConnected(true);
       }
     });
 
+    // Set the audio and video tracks to appropriate states using the values stored on localstorage
     if (myStream) {
       myStream.getAudioTracks()[0].enabled = userCtx?.audioOnBool === undefined ? false : userCtx?.audioOnBool;
       myStream.getVideoTracks()[0].enabled = userCtx?.videoOnBool === undefined ? false : userCtx?.videoOnBool;
     }
 
+    // Clean up all listeners when component is unmounted
     return () => {
       docRefListener();
       collectionRefListener();
     };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [myStream]);
+  }, []);
 
   return (
     <>
@@ -375,12 +399,28 @@ export default function VideoPlayerOverview() {
           }}
         >
           {isCameraOn && (
-            <MicAndVideo
-              audioBool={userCtx?.audioOnBool}
-              videoBool={userCtx?.videoOnBool}
-              updateMic={updateAudio}
-              updateVideo={updateVideo}
-            />
+            <>
+              <MicAndVideo
+                audioBool={userCtx?.audioOnBool}
+                videoBool={userCtx?.videoOnBool}
+                updateMic={updateAudio}
+                updateVideo={updateVideo}
+              />
+
+              {isPeersConnected && (
+                <IconButton
+                  sx={{
+                    marginLeft: "10px",
+                    backgroundColor: "red",
+                    border: "1px solid white",
+
+                    "&:hover": { backgroundColor: "red" },
+                  }}
+                >
+                  <CallEndIcon sx={{ fontSize: "30px", color: "white" }} />
+                </IconButton>
+              )}
+            </>
           )}
         </Box>
       </Box>

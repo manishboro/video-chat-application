@@ -52,10 +52,11 @@ const RoomIDForm: React.FC<JoinMeetingFormProps> = ({ handleClose, alert, roomId
       <CustomTextField
         id="personToCall"
         label="Room URL"
-        value={window.location.href}
+        value={`${window.location.protocol}//${window.location.host}/?type=r&id=${roomId}`}
         disabled={true}
         customRef={roomURLRef}
       />
+
       <CustomButton
         text="Copy URL"
         Icon={ContentCopyIcon}
