@@ -299,39 +299,43 @@ export default function VideoPlayerOverview() {
   };
 
   React.useEffect(() => {
-    let id = query.get("id");
-    let type = query.get("type");
-    let mode = query.get("mode");
+    const handleFunc = async () => {
+      let id = query.get("id");
+      let type = query.get("type");
+      let mode = query.get("mode");
 
-    if (type === "r" && id && mode === "auto") {
-      openCamera(true);
-      answerCall(id, true);
-    }
-
-    // Listen for connectionstatechange on the local RTCPeerConnection
-    pc.addEventListener("connectionstatechange", () => {
-      console.log(pc.connectionState);
-
-      if (pc.connectionState === "connected") {
-        console.log("Peers connected!");
-        setPeersConnected(true);
+      if (type === "r" && id && mode === "auto") {
+        await openCamera(true);
+        answerCall(id, true);
       }
 
-      if (["disconnected", "closed", "failed"].includes(pc.connectionState)) {
-        setPeersConnected(false);
+      // Listen for connectionstatechange on the local RTCPeerConnection
+      pc.addEventListener("connectionstatechange", () => {
+        console.log(pc.connectionState);
 
-        // Remove firebase listeners
-        docRefListener();
-        collectionRefListener();
+        if (pc.connectionState === "connected") {
+          console.log("Peers connected!");
+          setPeersConnected(true);
+        }
 
-        history.push("/");
-        window.location.reload();
+        if (["disconnected", "closed", "failed"].includes(pc.connectionState)) {
+          setPeersConnected(false);
 
-        /* 
-          pc.close(); // Throws error when used pc.close()
-        */
-      }
-    });
+          // Remove firebase listeners
+          docRefListener();
+          collectionRefListener();
+
+          history.push("/");
+          window.location.reload();
+
+          /* 
+            pc.close(); // Throws error when used pc.close()
+          */
+        }
+      });
+    };
+
+    handleFunc();
 
     // Clean up all listeners when component is unmounted
     return () => {
