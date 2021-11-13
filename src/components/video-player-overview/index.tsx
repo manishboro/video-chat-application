@@ -361,7 +361,7 @@ export default function VideoPlayerOverview() {
     <>
       <Box
         sx={{
-          height: "100vh",
+          height: "100%",
           width: "100vw",
           backgroundColor: "#484848",
           display: "flex",
@@ -370,7 +370,7 @@ export default function VideoPlayerOverview() {
           flexDirection: "column",
         }}
       >
-        {matches_620px ? null : isPeersConnected ? (
+        {isPeersConnected ? (
           isInfoAlert && (
             <Alert
               severity="info"
@@ -386,7 +386,7 @@ export default function VideoPlayerOverview() {
               Please do not refresh the page while on call to avoid disconnection
             </Alert>
           )
-        ) : (
+        ) : matches_620px ? null : (
           <Box
             sx={{
               height: "100px",
@@ -420,17 +420,15 @@ export default function VideoPlayerOverview() {
 
         <Box
           sx={{
-            height: `calc(100vh - ${matches_620px ? "100px" : isPeersConnected ? "100px" : "200px"})`,
+            height: `calc(100vh - ${matches_620px ? "60px" : isPeersConnected ? "100px" : "200px"})`,
             width: "100vw",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
 
-            "& > div:not(:last-child)": { margin: ".5rem" },
+            "& > div": { margin: ".5rem" },
 
-            "@media (max-width: 960px)": {
-              flexDirection: "column",
-            },
+            "@media (max-width: 960px)": { flexDirection: "column" },
           }}
         >
           <VideoPlayer videoRef={localStreamRef} displayName={userCtx?.displayName} muted={true} />
@@ -455,6 +453,8 @@ export default function VideoPlayerOverview() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+
+            "@media (max-width:620px)": { height: "60px" },
           }}
         >
           {isCameraOn && (

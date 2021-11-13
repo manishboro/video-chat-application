@@ -10,13 +10,13 @@ const useStyles = makeStyles({
   root: {
     position: "relative",
     border: "1px solid white",
-    width: "45vw",
-    height: "30vw",
+    width: "auto",
+    height: "45vh",
     overflow: "hidden",
 
-    "@media (max-width: 960px)": { width: "60vw", height: "35vw" },
+    "@media (max-width: 960px)": { width: "auto", height: "40vh" },
 
-    "@media (max-width: 550px)": { width: "90vw", height: "50vw" },
+    "@media (max-width: 550px)": { width: "auto", height: "40vh" },
   },
 
   displayName: {

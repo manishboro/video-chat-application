@@ -4,8 +4,8 @@ import Home from "./pages/home";
 
 const StyledRoot = styled("div")(({ theme }) => ({
   width: "100%",
-  height: "100vh",
-  position: "fixed",
+  height: "100%",
+  position: "absolute",
   top: 0,
   left: 0,
 }));
