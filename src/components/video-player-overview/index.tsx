@@ -303,15 +303,24 @@ export default function VideoPlayerOverview() {
       }
 
       // Listen for connectionstatechange on the local RTCPeerConnection
-      pc.addEventListener("connectionstatechange", () => {
+      pc.addEventListener("connectionstatechange", async () => {
         console.log(pc.connectionState);
 
         if (pc.connectionState === "connected") {
           console.log("Peers connected!");
           setPeersConnected(true);
+
+          if (id) {
+            const docRef = doc(firestore, "calls_2", id);
+            await updateDoc(docRef, { isPeersConnected: true });
+          }
+
+          alert?.setStateSnackbarContext(`Connection established`, "success");
         }
 
         if (["disconnected", "closed", "failed"].includes(pc.connectionState)) {
+          alert?.setStateSnackbarContext(`Call ${pc.connectionState}`, "info");
+
           setPeersConnected(false);
 
           // Remove firebase listeners

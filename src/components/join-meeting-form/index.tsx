@@ -35,7 +35,7 @@ const JoinMeetingForm: React.FC<JoinMeetingFormProps> = ({ handleClose, answerCa
       onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         answerCall(roomId);
-        alert?.setStateSnackbarContext("Meeting joined", "success");
+        alert?.setStateSnackbarContext("Joining meeting", "info");
         handleClose();
       }}
     >
