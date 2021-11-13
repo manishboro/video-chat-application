@@ -1,3 +1,15 @@
+/* Prod credentials
+// const firebaseConfig = {
+//   apiKey: "AIzaSyCoNmlwo5krLmagQ-jbrx-dJRV1lYFpobI",
+//   authDomain: "video-consultation-2e500.firebaseapp.com",
+//   projectId: "video-consultation-2e500",
+//   storageBucket: "video-consultation-2e500.appspot.com",
+//   messagingSenderId: "2618798322",
+//   appId: "1:2618798322:web:9223909e621fdbf388e06b",
+//   measurementId: "G-ECQHMW0XWL"
+// };
+*/
+
 // {
 //   apiKey: "AIzaSyA5dbHOLsGqFZdNMgydV5CeKr834SP8Y-M",
 //   authDomain: "video-chat-app-3cc94.firebaseapp.com",
