@@ -12,9 +12,11 @@ type EnterNameFormProps = {
   setTrigger: React.Dispatch<React.SetStateAction<boolean>>;
   showAlert?: boolean;
   message?: string;
+  updateDB?: (roomId: string, name: string) => void;
+  roomId?: string | null;
 };
 
-export default function EnterNameForm({ setTrigger, showAlert = true, message }: EnterNameFormProps) {
+export default function EnterNameForm({ setTrigger, showAlert = true, message, updateDB, roomId }: EnterNameFormProps) {
   const [displayName, setDisplayName] = React.useState(getItemFromStorage("displayName") ?? "");
   const alert = useAlertContext();
 
@@ -53,9 +55,12 @@ export default function EnterNameForm({ setTrigger, showAlert = true, message }:
         }}
         onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
           e.preventDefault();
+
           setItemToStorage("displayName", displayName);
           alert?.setStateSnackbarContext(`${message ? message : "Display name added successfully"}`, "success");
           setTrigger((prev) => !prev);
+
+          if (updateDB && roomId) updateDB(roomId, displayName);
         }}
       >
         <CustomTextField

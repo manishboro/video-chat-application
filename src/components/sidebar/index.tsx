@@ -7,6 +7,7 @@ import { nanoid } from "nanoid";
 
 interface SidebarProps {
   name: string;
+  show: boolean;
   Icon?: React.ElementType;
   onClick?: () => void;
   button?: any;
@@ -49,20 +50,23 @@ export default function Sidebar({ items }: { items: SidebarProps[] }) {
       <Drawer anchor="right" open={isOpen} onClose={toggleDrawer(false)}>
         <Box sx={{ width: "280px", backgroundColor: "white", padding: ".5rem 0" }}>
           <List>
-            {items.map((item) => (
-              <ListItem
-                key={nanoid()}
-                button={item.button === undefined ? false : item.button}
-                onClick={() => (item.onClick ? item.onClick() : null)}
-              >
-                {item.Icon && (
-                  <ListItemIcon>
-                    <item.Icon />
-                  </ListItemIcon>
-                )}
-                <ListItemText primary={item.name} />
-              </ListItem>
-            ))}
+            {items.map(
+              (item) =>
+                item.show && (
+                  <ListItem
+                    key={nanoid()}
+                    button={item.button === undefined ? false : item.button}
+                    onClick={() => (item.onClick ? item.onClick() : null)}
+                  >
+                    {item.Icon && (
+                      <ListItemIcon>
+                        <item.Icon />
+                      </ListItemIcon>
+                    )}
+                    <ListItemText primary={item.name} />
+                  </ListItem>
+                )
+            )}
           </List>
         </Box>
       </Drawer>

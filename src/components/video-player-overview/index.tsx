@@ -52,7 +52,11 @@ export default function VideoPlayerOverview() {
   const userCtx = useUserContext();
   const alert = useAlertContext();
   const modal = useModalContext();
+
   const query = useQuery();
+  let id = query.get("id");
+  let type = query.get("type");
+  let mode = query.get("mode");
 
   const matches_620px = useMediaQuery("(max-width: 620px)");
 
@@ -232,8 +236,6 @@ export default function VideoPlayerOverview() {
         userCtx?.setAudioOnBool(!userCtx?.audioOnBool);
         setItemToStorage("audioOnBool", Boolean(!userCtx?.audioOnBool).toString());
 
-        let type = query.get("type");
-
         if (roomId && type) {
           let userAudio =
             type === "c" ? { callerAudio: !userCtx?.audioOnBool } : { receiverAudio: !userCtx?.audioOnBool };
@@ -253,8 +255,6 @@ export default function VideoPlayerOverview() {
         myStream.getVideoTracks()[0].enabled = !userCtx?.videoOnBool;
         userCtx?.setVideoOnBool(!userCtx?.videoOnBool);
         setItemToStorage("videoOnBool", Boolean(!userCtx?.videoOnBool).toString());
-
-        let type = query.get("type");
 
         if (roomId && type) {
           let userVideo;
@@ -296,10 +296,6 @@ export default function VideoPlayerOverview() {
 
   React.useEffect(() => {
     const handleFunc = async () => {
-      let id = query.get("id");
-      let type = query.get("type");
-      let mode = query.get("mode");
-
       // Receive call automatically using meeting join URL
       if (type === "r" && id && mode === "auto") {
         await openCamera(true);
@@ -488,23 +484,38 @@ export default function VideoPlayerOverview() {
               name: "Create Meeting",
               button: true,
               Icon: VideoCameraFrontIcon,
+              show: isPeersConnected ? false : true,
               onClick: startCall,
             },
             {
               name: "Join Meeting",
               button: true,
               Icon: KeyboardIcon,
+              show: isPeersConnected ? false : true,
               onClick: () => openModal(JoinMeetingForm, { answerCall }),
             },
             {
               name: "Edit display name",
               button: true,
               Icon: EditIcon,
+              show: true,
               onClick: () =>
                 openModal(EnterNameForm, {
                   setTrigger: userCtx?.setTrigger,
                   showAlert: false,
                   message: "Display name changed successfully",
+                  roomId: id,
+                  updateDB: async (roomId: string, name: string) => {
+                    const docRef = doc(firestore, "calls_2", roomId);
+
+                    let displayName;
+
+                    if (type === "c") displayName = { callerName: name };
+                    else if (type === "r") displayName = { receiverName: name };
+                    else return;
+
+                    await updateDoc(docRef, displayName);
+                  },
                 }),
             },
           ]}
