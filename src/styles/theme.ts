@@ -18,6 +18,7 @@ let theme = createTheme({
       styleOverrides: `
        body {
          background-color: #dcdcdc;
+         height: 100%;
        }
      `,
     },

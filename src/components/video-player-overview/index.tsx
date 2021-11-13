@@ -420,7 +420,7 @@ export default function VideoPlayerOverview() {
 
         <Box
           sx={{
-            height: `calc(100vh - ${matches_620px ? "60px" : isPeersConnected ? "100px" : "200px"})`,
+            height: `calc(100% - ${matches_620px ? "60px" : isPeersConnected ? "80px" : "180px"})`,
             width: "100vw",
             display: "flex",
             alignItems: "center",
@@ -428,7 +428,7 @@ export default function VideoPlayerOverview() {
 
             "& > div": { margin: ".5rem" },
 
-            "@media (max-width: 960px)": { flexDirection: "column" },
+            "@media (max-width: 960px)": { flexDirection: "column-reverse" },
           }}
         >
           <VideoPlayer videoRef={localStreamRef} displayName={userCtx?.displayName} muted={true} />
@@ -447,7 +447,7 @@ export default function VideoPlayerOverview() {
 
         <Box
           sx={{
-            height: "100px",
+            height: "80px",
             width: "100%",
             padding: "0 2rem",
             display: "flex",
