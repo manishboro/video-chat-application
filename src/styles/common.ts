@@ -5,7 +5,7 @@ import VideocamIcon from "@mui/icons-material/Videocam";
 import VideocamOffIcon from "@mui/icons-material/VideocamOff";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
-let IconStyles = { fontSize: "30px", color: "white" };
+let IconStyles = { fontSize: "25px", color: "white" };
 
 export const StyledMicIcon = styled(MicIcon)(({ theme }) => ({
   ...IconStyles,

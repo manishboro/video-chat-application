@@ -477,7 +477,7 @@ export default function VideoPlayerOverview() {
                   }}
                   onClick={disconnectCall}
                 >
-                  <CallEndIcon sx={{ fontSize: "30px", color: "white" }} />
+                  <CallEndIcon sx={{ fontSize: "25px", color: "white" }} />
                 </IconButton>
               )}
             </>
