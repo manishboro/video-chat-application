@@ -28,7 +28,21 @@ export default function Sidebar({ items }: { items: SidebarProps[] }) {
 
   return (
     <>
-      <IconButton sx={{ position: "absolute", top: "1rem", right: "1rem" }} onClick={() => setIsOpen(true)}>
+      <IconButton
+        sx={{
+          position: "absolute",
+          top: "1rem",
+          right: "1rem",
+          backgroundColor: "#646464",
+          boxShadow: 20,
+          border: "1px solid white",
+
+          "&:hover": {
+            backgroundColor: "#646464",
+          },
+        }}
+        onClick={() => setIsOpen(true)}
+      >
         <MenuIcon sx={{ color: "white", fontSize: "2.5rem" }} />
       </IconButton>
 

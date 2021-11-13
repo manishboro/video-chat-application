@@ -304,6 +304,7 @@ export default function VideoPlayerOverview() {
       let type = query.get("type");
       let mode = query.get("mode");
 
+      // Receive call automatically using meeting join URL
       if (type === "r" && id && mode === "auto") {
         await openCamera(true);
         answerCall(id, true);
