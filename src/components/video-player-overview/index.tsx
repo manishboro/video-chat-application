@@ -128,7 +128,6 @@ export default function VideoPlayerOverview() {
           const docData = docSnapshot.data();
 
           setRemoteUserDisplayName(docData.receiverName);
-          // setIsCallAccepted(docData.isCallAccepted ?? false);
           setRemoteAudio(docData.receiverAudio);
           setRemoteVideo(docData.receiverVideo);
 
@@ -194,12 +193,9 @@ export default function VideoPlayerOverview() {
       await updateDoc(docRef, {
         answer,
         receiverName: userCtx?.displayName,
-        // isCallAccepted: true,
         receiverAudio: userCtx?.audioOnBool,
         receiverVideo: userCtx?.videoOnBool,
       });
-
-      // setIsCallAccepted(true);
 
       // Attach listeners to look for any changes in the document
       docRefListener = onSnapshot(docRef, (docSnapshot) => {
