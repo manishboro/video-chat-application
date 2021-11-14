@@ -102,10 +102,10 @@ export default function VideoPlayerOverview() {
 
   const startCall = async (id?: string) => {
     try {
-      const docRef = doc(firestore, "calls_2", id ?? nanoid());
+      const docRef = doc(firestore, "calls", id ?? nanoid());
 
-      const offerCandidatesCollectionRef = collection(firestore, "calls_2", docRef.id, "offerCandidates"); // collection ref
-      const answerCandidatesCollectionRef = collection(firestore, "calls_2", docRef.id, "answerCandidates"); // collection ref
+      const offerCandidatesCollectionRef = collection(firestore, "calls", docRef.id, "offerCandidates"); // collection ref
+      const answerCandidatesCollectionRef = collection(firestore, "calls", docRef.id, "answerCandidates"); // collection ref
 
       // Get ICE candidates for caller, save to db
       // **The listener should be added before setting the offer
@@ -170,8 +170,8 @@ export default function VideoPlayerOverview() {
     try {
       setRoomId(roomId);
 
-      const offerCandidatesCollectionRef = collection(firestore, "calls_2", roomId, "offerCandidates"); // collection ref
-      const answerCandidatesCollectionRef = collection(firestore, "calls_2", roomId, "answerCandidates"); // collection ref
+      const offerCandidatesCollectionRef = collection(firestore, "calls", roomId, "offerCandidates"); // collection ref
+      const answerCandidatesCollectionRef = collection(firestore, "calls", roomId, "answerCandidates"); // collection ref
 
       // Get ICE candidates for receiver, save to db
       pc.onicecandidate = async (event) => {
@@ -179,7 +179,7 @@ export default function VideoPlayerOverview() {
       };
 
       // Save offer description as remote description
-      const docRef = doc(firestore, "calls_2", roomId);
+      const docRef = doc(firestore, "calls", roomId);
       const docSnapshot = await getDoc(docRef);
 
       if (docSnapshot.exists()) {
@@ -240,7 +240,7 @@ export default function VideoPlayerOverview() {
           let userAudio =
             type === "c" ? { callerAudio: !userCtx?.audioOnBool } : { receiverAudio: !userCtx?.audioOnBool };
 
-          const docRef = doc(firestore, "calls_2", roomId);
+          const docRef = doc(firestore, "calls", roomId);
           await updateDoc(docRef, userAudio);
         }
       }
@@ -263,7 +263,7 @@ export default function VideoPlayerOverview() {
           else if (type === "r") userVideo = { receiverVideo: !userCtx?.videoOnBool };
           else return;
 
-          const docRef = doc(firestore, "calls_2", roomId);
+          const docRef = doc(firestore, "calls", roomId);
           await updateDoc(docRef, userVideo);
         }
       }
@@ -311,7 +311,7 @@ export default function VideoPlayerOverview() {
           setPeersConnected(true);
 
           if (id) {
-            const docRef = doc(firestore, "calls_2", id);
+            const docRef = doc(firestore, "calls", id);
             await updateDoc(docRef, { isPeersConnected: true });
           }
 
@@ -515,7 +515,7 @@ export default function VideoPlayerOverview() {
                   message: "Display name changed successfully",
                   roomId: id,
                   updateDB: async (roomId: string, name: string) => {
-                    const docRef = doc(firestore, "calls_2", roomId);
+                    const docRef = doc(firestore, "calls", roomId);
 
                     let displayName;
 
