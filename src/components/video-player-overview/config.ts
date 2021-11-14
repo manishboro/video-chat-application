@@ -1,15 +1,15 @@
-/* Prod credentials
-// const firebaseConfig = {
-//   apiKey: "AIzaSyCoNmlwo5krLmagQ-jbrx-dJRV1lYFpobI",
-//   authDomain: "video-consultation-2e500.firebaseapp.com",
-//   projectId: "video-consultation-2e500",
-//   storageBucket: "video-consultation-2e500.appspot.com",
-//   messagingSenderId: "2618798322",
-//   appId: "1:2618798322:web:9223909e621fdbf388e06b",
-//   measurementId: "G-ECQHMW0XWL"
-// };
-*/
+// Prod credentials
+export const firebaseConfig = {
+  apiKey: "AIzaSyCoNmlwo5krLmagQ-jbrx-dJRV1lYFpobI",
+  authDomain: "video-consultation-2e500.firebaseapp.com",
+  projectId: "video-consultation-2e500",
+  storageBucket: "video-consultation-2e500.appspot.com",
+  messagingSenderId: "2618798322",
+  appId: "1:2618798322:web:9223909e621fdbf388e06b",
+  measurementId: "G-ECQHMW0XWL",
+};
 
+// Dev credentials
 // {
 //   apiKey: "AIzaSyA5dbHOLsGqFZdNMgydV5CeKr834SP8Y-M",
 //   authDomain: "video-chat-app-3cc94.firebaseapp.com",
@@ -20,15 +20,15 @@
 //   measurementId: "G-XTQEVW84K3",
 // }
 
-export const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_APIKEY,
-  authDomain: process.env.REACT_APP_AUTH_DOMAIN,
-  projectId: process.env.REACT_APP_PROJECT_ID,
-  storageBucket: process.env.REACT_APP_STORAGE_BUCKET,
-  messagingSenderId: process.env.REACT_APP_MESSAGING_SENDER_ID,
-  appId: process.env.REACT_APP_APP_ID,
-  measurementId: process.env.REACT_APP_MEASUREMENT_ID,
-};
+// export const firebaseConfig = {
+//   apiKey: process.env.REACT_APP_FIREBASE_APIKEY,
+//   authDomain: process.env.REACT_APP_AUTH_DOMAIN,
+//   projectId: process.env.REACT_APP_PROJECT_ID,
+//   storageBucket: process.env.REACT_APP_STORAGE_BUCKET,
+//   messagingSenderId: process.env.REACT_APP_MESSAGING_SENDER_ID,
+//   appId: process.env.REACT_APP_APP_ID,
+//   measurementId: process.env.REACT_APP_MEASUREMENT_ID,
+// };
 
 export const servers = {
   iceServers: [
