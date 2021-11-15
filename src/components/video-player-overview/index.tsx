@@ -22,7 +22,7 @@ import VideoCameraFrontIcon from "@mui/icons-material/VideoCameraFront";
 import KeyboardIcon from "@mui/icons-material/Keyboard";
 import EditIcon from "@mui/icons-material/Edit";
 import CallEndIcon from "@mui/icons-material/CallEnd";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+// import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
 import CustomButton from "../../utility-components/CustomButton";
 import VideoPlayer, { MicAndVideo } from "../video-player";
