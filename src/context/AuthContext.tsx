@@ -1,0 +1,13 @@
+import React from "react";
+import AuthForm from "../components/auth-form";
+
+import { useAlertContext } from "./AlertContext";
+
+const AuthContextProvider: React.FC = ({ children }) => {
+  const alert = useAlertContext();
+  const [authorized, setAuthorized] = React.useState(false);
+
+  return <>{authorized ? children : <AuthForm alert={alert} setAuthorized={setAuthorized} />}</>;
+};
+
+export default AuthContextProvider;

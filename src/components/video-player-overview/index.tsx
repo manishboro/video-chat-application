@@ -22,6 +22,7 @@ import VideoCameraFrontIcon from "@mui/icons-material/VideoCameraFront";
 import KeyboardIcon from "@mui/icons-material/Keyboard";
 import EditIcon from "@mui/icons-material/Edit";
 import CallEndIcon from "@mui/icons-material/CallEnd";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
 import CustomButton from "../../utility-components/CustomButton";
 import VideoPlayer, { MicAndVideo } from "../video-player";
@@ -503,6 +504,17 @@ export default function VideoPlayerOverview() {
               show: isPeersConnected ? false : true,
               onClick: () => openModal(JoinMeetingForm, { answerCall }),
             },
+            // {
+            //   name: "Copy room ID or URL",
+            //   button: true,
+            //   Icon: ContentCopyIcon,
+            //   show: isPeersConnected && type === "c" ? true : false,
+            //   onClick: () =>
+            //     openModal(RoomIDForm, {
+            //       roomId: id,
+            //       alert,
+            //     }),
+            // },
             {
               name: "Edit display name",
               button: true,

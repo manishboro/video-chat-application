@@ -13,18 +13,21 @@ import reportWebVitals from "./reportWebVitals";
 import UserContextProvider from "./context/UserContext";
 import ModalContextProvider from "./context/ModalContext";
 import AlertContextProvider from "./context/AlertContext";
+import AuthContextProvider from "./context/AuthContext";
 
 ReactDOM.render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <Router>
         <AlertContextProvider>
-          <ModalContextProvider>
-            <UserContextProvider>
-              <CssBaseline />
-              <App />
-            </UserContextProvider>
-          </ModalContextProvider>
+          <AuthContextProvider>
+            <ModalContextProvider>
+              <UserContextProvider>
+                <CssBaseline />
+                <App />
+              </UserContextProvider>
+            </ModalContextProvider>
+          </AuthContextProvider>
         </AlertContextProvider>
       </Router>
     </ThemeProvider>

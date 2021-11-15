@@ -14,7 +14,7 @@ interface JoinMeetingFormProps {
   roomId: string;
 }
 
-const RoomIDForm: React.FC<JoinMeetingFormProps> = ({ handleClose, alert, roomId }) => {
+const RoomIDForm: React.FC<JoinMeetingFormProps> = ({ alert, roomId }) => {
   const roomIdRef = React.useRef(null);
   const roomURLRef = React.useRef(null);
 
