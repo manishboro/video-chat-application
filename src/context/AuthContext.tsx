@@ -7,7 +7,15 @@ const AuthContextProvider: React.FC = ({ children }) => {
   const alert = useAlertContext();
   const [authorized, setAuthorized] = React.useState(false);
 
-  return <>{authorized ? children : <AuthForm alert={alert} setAuthorized={setAuthorized} />}</>;
+  return (
+    <>
+      {process.env.NODE_ENV === "development" || authorized ? (
+        children
+      ) : (
+        <AuthForm alert={alert} setAuthorized={setAuthorized} />
+      )}
+    </>
+  );
 };
 
 export default AuthContextProvider;
