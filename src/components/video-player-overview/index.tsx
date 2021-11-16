@@ -57,6 +57,7 @@ export default function VideoPlayerOverview() {
   let id = query.get("id");
   let type = query.get("type");
   let mode = query.get("mode");
+  let phoneNo = query.get("p");
 
   const matches_620px = useMediaQuery("(max-width: 620px)");
 
@@ -296,6 +297,12 @@ export default function VideoPlayerOverview() {
 
   React.useEffect(() => {
     const handleFunc = async () => {
+      // Receive call automatically using meeting join URL
+      if (type === "c" && mode === "auto" && phoneNo) {
+        await openCamera(true);
+        startCall();
+      }
+
       // Receive call automatically using meeting join URL
       if (type === "r" && id && mode === "auto") {
         await openCamera(true);
