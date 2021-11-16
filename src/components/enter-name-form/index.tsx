@@ -3,7 +3,11 @@ import React from "react";
 import { Box } from "@mui/system";
 
 import CustomTextField from "../../utility-components/CustomTextField";
-import CustomButton from "../../utility-components/CustomButton";
+
+let url =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:3000/"
+    : "https://kushalam-video-consultation.netlify.app/";
 
 export default function EnterNameForm() {
   const [phoneNumber, setPhoneNumber] = React.useState("");
@@ -54,7 +58,7 @@ export default function EnterNameForm() {
       >
         {phoneNumber.length === 10 ? (
           <a
-            href={`https://kushalam-video-consultation.netlify.app/?p=${phoneNumber}`}
+            href={`${url}?p=${phoneNumber}&mode=auto&type=c`}
             target="_blank"
             rel="noopener noreferrer"
             style={{
