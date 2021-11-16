@@ -32,16 +32,46 @@ export default function EnterNameForm() {
     >
       <CustomTextField
         id="displayName"
-        label="Enter display name"
+        label="Enter phone number"
         value={displayName}
         handleChange={(e) => setDisplayName(e.target.value)}
       />
 
-      <CustomButton
+      {/* <CustomButton
         text="Continue"
         rootStyles={{ marginTop: "1rem" }}
         type="submit"
-      />
+      /> */}
+
+      <Box
+        component="button"
+        type="submit"
+        disabled
+        sx={{
+          fontSize: "1.2rem",
+          outline: "none",
+          borderRadius: ".5rem",
+          marginTop: "1rem",
+          cursor: "pointer",
+          backgroundColor: "#0000FF",
+          border: "none",
+          boxShadow: 3,
+        }}
+      >
+        <a
+          href={`https://kushalam-video-consultation.netlify.app/`}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            padding: ".5rem 1.5rem",
+            display: "block",
+            textDecoration: "none",
+            color: "white",
+          }}
+        >
+          Call
+        </a>
+      </Box>
     </Box>
   );
 }
