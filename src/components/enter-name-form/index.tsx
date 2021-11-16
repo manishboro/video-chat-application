@@ -6,7 +6,7 @@ import CustomTextField from "../../utility-components/CustomTextField";
 import CustomButton from "../../utility-components/CustomButton";
 
 export default function EnterNameForm() {
-  const [displayName, setDisplayName] = React.useState("");
+  const [phoneNumber, setPhoneNumber] = React.useState("");
 
   return (
     <Box
@@ -33,19 +33,13 @@ export default function EnterNameForm() {
       <CustomTextField
         id="displayName"
         label="Enter phone number"
-        value={displayName}
-        handleChange={(e) => setDisplayName(e.target.value)}
+        type="number"
+        value={phoneNumber}
+        handleChange={(e) => setPhoneNumber(e.target.value)}
       />
-
-      {/* <CustomButton
-        text="Continue"
-        rootStyles={{ marginTop: "1rem" }}
-        type="submit"
-      /> */}
 
       <Box
         component="button"
-        type="submit"
         disabled
         sx={{
           fontSize: "1.2rem",
@@ -58,19 +52,31 @@ export default function EnterNameForm() {
           boxShadow: 3,
         }}
       >
-        <a
-          href={`https://kushalam-video-consultation.netlify.app/`}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            padding: ".5rem 1.5rem",
-            display: "block",
-            textDecoration: "none",
-            color: "white",
-          }}
-        >
-          Call
-        </a>
+        {phoneNumber.length === 10 ? (
+          <a
+            href={`https://kushalam-video-consultation.netlify.app/?p=${phoneNumber}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              padding: ".5rem 1.5rem",
+              display: "block",
+              textDecoration: "none",
+              color: "white",
+            }}
+          >
+            Call
+          </a>
+        ) : (
+          <div
+            style={{
+              padding: ".5rem 1.5rem",
+              display: "block",
+              color: "white",
+            }}
+          >
+            Call
+          </div>
+        )}
       </Box>
     </Box>
   );
