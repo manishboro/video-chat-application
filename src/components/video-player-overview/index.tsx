@@ -101,7 +101,7 @@ export default function VideoPlayerOverview() {
     }
   };
 
-  const startCall = async (id?: string) => {
+  const startCall = async (id?: string, auto?: boolean) => {
     try {
       const docRef = doc(firestore, "calls", id ?? nanoid());
 
@@ -159,8 +159,9 @@ export default function VideoPlayerOverview() {
 
       history.push(`/?type=c&id=${docRef.id}`);
 
-      openModal(RoomIDForm, { roomId: docRef.id });
+      if (!auto) openModal(RoomIDForm, { roomId: docRef.id });
 
+      // if (!auto)
       alert?.setStateSnackbarContext("Meeting created", "success");
     } catch (err: any) {
       alert?.setStateSnackbarContext(err.message, "warning");
@@ -299,12 +300,14 @@ export default function VideoPlayerOverview() {
     const handleFunc = async () => {
       // Receive call automatically using meeting join URL
       if (type === "c" && mode === "auto" && phoneNo) {
+        alert?.setStateSnackbarContext(`Creating meeting`, "info");
         await openCamera(true);
-        startCall();
+        startCall(undefined, true);
       }
 
       // Receive call automatically using meeting join URL
       if (type === "r" && id && mode === "auto") {
+        alert?.setStateSnackbarContext(`Joining meeting`, "info");
         await openCamera(true);
         answerCall(id, true);
       }
@@ -329,6 +332,8 @@ export default function VideoPlayerOverview() {
           alert?.setStateSnackbarContext(`Call ${pc.connectionState}`, "info");
 
           setPeersConnected(false);
+
+          pc.close();
 
           // Remove firebase listeners
           docRefListener();
