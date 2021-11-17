@@ -161,8 +161,9 @@ export default function VideoPlayerOverview() {
 
       if (!auto) openModal(RoomIDForm, { roomId: docRef.id });
 
-      // if (!auto)
       alert?.setStateSnackbarContext("Meeting created", "success");
+
+      return docRef.id;
     } catch (err: any) {
       alert?.setStateSnackbarContext(err.message, "warning");
     }
@@ -296,13 +297,36 @@ export default function VideoPlayerOverview() {
     modal?.setComponent(<Component handleClose={modal?.handleClose} alert={alert} {...otherProps} />);
   };
 
+  const sendMeetingLinkInWhatsapp = async (phoneNo: string, roomId: string | undefined) => {
+    try {
+      alert?.setStateSnackbarContext("Sending meeting link to patient", "info");
+
+      let url = `${process.env.REACT_APP_UI_BASE_URL}?type=r&mode=auto&id=${roomId}`;
+
+      const resPro = await fetch(`${process.env.REACT_APP_API_BASE_URL}message/whatsapp/${phoneNo}`, {
+        method: "POST",
+        headers: { "X-Api-Key": "k504mhMps12qEpynnDZPYaqo0XteNy4U3uc3lPIc" },
+        body: JSON.stringify({
+          message: `Please join the meeting using the link ${url}`,
+        }),
+      });
+
+      const res = await resPro.json();
+
+      if (res.details === "success") alert?.setStateSnackbarContext("Meeting link sent", "success");
+    } catch (err: any) {
+      alert?.setStateSnackbarContext(err.message, "warning");
+    }
+  };
+
   React.useEffect(() => {
     const handleFunc = async () => {
       // Receive call automatically using meeting join URL
       if (type === "c" && mode === "auto" && phoneNo) {
         alert?.setStateSnackbarContext(`Creating meeting`, "info");
         await openCamera(true);
-        startCall(undefined, true);
+        const roomId = await startCall(undefined, true);
+        sendMeetingLinkInWhatsapp(phoneNo, roomId);
       }
 
       // Receive call automatically using meeting join URL
@@ -341,10 +365,6 @@ export default function VideoPlayerOverview() {
 
           history.push("/");
           window.location.reload();
-
-          /* 
-            pc.close(); // Throws error when used pc.close()
-          */
         }
       });
     };
@@ -399,7 +419,7 @@ export default function VideoPlayerOverview() {
               Please do not refresh the page while on call to avoid disconnection
             </Alert>
           )
-        ) : matches_620px ? null : (
+        ) : matches_620px || roomId ? null : (
           <Box
             sx={{
               height: "100px",
@@ -433,7 +453,7 @@ export default function VideoPlayerOverview() {
 
         <Box
           sx={{
-            height: `calc(100% - ${matches_620px ? "60px" : isPeersConnected ? "80px" : "180px"})`,
+            height: `calc(100% - ${matches_620px ? "60px" : isPeersConnected || roomId ? "80px" : "180px"})`,
             width: "100vw",
             display: "flex",
             alignItems: "center",
@@ -505,14 +525,14 @@ export default function VideoPlayerOverview() {
               name: "Create Meeting",
               button: true,
               Icon: VideoCameraFrontIcon,
-              show: isPeersConnected ? false : true,
+              show: isPeersConnected || roomId ? false : true,
               onClick: startCall,
             },
             {
               name: "Join Meeting",
               button: true,
               Icon: KeyboardIcon,
-              show: isPeersConnected ? false : true,
+              show: isPeersConnected || roomId ? false : true,
               onClick: () => openModal(JoinMeetingForm, { answerCall }),
             },
             {
