@@ -6,7 +6,7 @@ import CustomTextField from "../../utility-components/CustomTextField";
 
 let url =
   process.env.NODE_ENV === "development"
-    ? "http://localhost:3000/"
+    ? "http://localhost:3001/"
     : "https://kushala-video-consultation.netlify.app/";
 
 export default function EnterNameForm() {
