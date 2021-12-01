@@ -305,7 +305,10 @@ export default function VideoPlayerOverview() {
 
       const resPro = await fetch(`${process.env.REACT_APP_API_BASE_URL}message/whatsapp/${phoneNo}`, {
         method: "POST",
-        headers: { "X-Api-Key": "k504mhMps12qEpynnDZPYaqo0XteNy4U3uc3lPIc" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Api-Key": "k504mhMps12qEpynnDZPYaqo0XteNy4U3uc3lPIc",
+        },
         body: JSON.stringify({
           message: `Please join the meeting using the link ${url}`,
         }),
@@ -313,7 +316,7 @@ export default function VideoPlayerOverview() {
 
       const res = await resPro.json();
 
-      if (res.details === "success") alert?.setStateSnackbarContext("Meeting link sent", "success");
+      if (res.data.details === "success") alert?.setStateSnackbarContext("Meeting link sent", "success");
     } catch (err: any) {
       alert?.setStateSnackbarContext(err.message, "warning");
     }
