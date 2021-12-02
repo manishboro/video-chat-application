@@ -6,8 +6,8 @@ import CustomTextField from "../../utility-components/CustomTextField";
 
 let url =
   process.env.NODE_ENV === "development"
-    ? "http://localhost:3001/"
-    : "https://kushala-video-consultation.netlify.app/";
+    ? process.env.REACT_APP_REDIRECT_DEV_URL
+    : process.env.REACT_APP_REDIRECT_PROD_URL;
 
 export default function EnterNameForm() {
   const [phoneNumber, setPhoneNumber] = React.useState("");
