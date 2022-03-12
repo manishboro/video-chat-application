@@ -79,7 +79,7 @@ export default function VideoPlayerOverview() {
     try {
       if (!auto) history.push("/"); // Reset URL
 
-      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
       remoteStream = new MediaStream();
 
       // Push tracks from local stream to peer connection
@@ -381,8 +381,8 @@ export default function VideoPlayerOverview() {
   React.useEffect(() => {
     // Set the audio and video tracks to appropriate states using the values stored on localstorage
     if (myStream) {
-      // myStream.getAudioTracks()[0].enabled = userCtx?.audioOnBool === undefined ? false : userCtx?.audioOnBool;
-      myStream.getVideoTracks()[0].enabled = userCtx?.videoOnBool === undefined ? false : userCtx?.videoOnBool;
+      myStream.getAudioTracks()[0].enabled = userCtx?.audioOnBool === undefined ? false : userCtx?.audioOnBool;
+      // myStream.getVideoTracks()[0].enabled = userCtx?.videoOnBool === undefined ? false : userCtx?.videoOnBool;
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
