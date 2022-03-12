@@ -1,5 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
+// eslint-disable-next-line
+import adapter from "webrtc-adapter";
 import "./styles/index.css";
 import { BrowserRouter as Router } from "react-router-dom";
 
