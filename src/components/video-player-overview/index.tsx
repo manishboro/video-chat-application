@@ -12,7 +12,7 @@ import {
   getDoc,
   updateDoc,
   Unsubscribe,
-  connectFirestoreEmulator,
+  // connectFirestoreEmulator,
 } from "firebase/firestore";
 
 import { Box } from "@mui/system";
@@ -38,7 +38,7 @@ import { setItemToStorage } from "../../utils/localStorage";
 
 let app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
-if (window.location.hostname === "localhost") connectFirestoreEmulator(firestore, "localhost", 6001);
+// if (window.location.hostname === "localhost") connectFirestoreEmulator(firestore, "localhost", 6001);
 
 // Global State
 const pc = new RTCPeerConnection(servers);
@@ -79,7 +79,7 @@ export default function VideoPlayerOverview() {
     try {
       if (!auto) history.push("/"); // Reset URL
 
-      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       remoteStream = new MediaStream();
 
       // Push tracks from local stream to peer connection
@@ -305,13 +305,8 @@ export default function VideoPlayerOverview() {
 
       const resPro = await fetch(`${process.env.REACT_APP_API_BASE_URL}message/whatsapp/${phoneNo}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Api-Key": "k504mhMps12qEpynnDZPYaqo0XteNy4U3uc3lPIc",
-        },
-        body: JSON.stringify({
-          message: `Please join the meeting using the link ${url}`,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: `Please join the meeting using the link ${url}` }),
       });
 
       const res = await resPro.json();
@@ -386,7 +381,7 @@ export default function VideoPlayerOverview() {
   React.useEffect(() => {
     // Set the audio and video tracks to appropriate states using the values stored on localstorage
     if (myStream) {
-      myStream.getAudioTracks()[0].enabled = userCtx?.audioOnBool === undefined ? false : userCtx?.audioOnBool;
+      // myStream.getAudioTracks()[0].enabled = userCtx?.audioOnBool === undefined ? false : userCtx?.audioOnBool;
       myStream.getVideoTracks()[0].enabled = userCtx?.videoOnBool === undefined ? false : userCtx?.videoOnBool;
     }
 
