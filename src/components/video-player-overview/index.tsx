@@ -306,7 +306,10 @@ export default function VideoPlayerOverview() {
       const resPro = await fetch(`${process.env.REACT_APP_API_BASE_URL}message/whatsapp/${phoneNo}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: `Please join the meeting using the link ${url}` }),
+        // body: JSON.stringify({ message: `Please join the meeting using the link ${url}` }),
+        body: JSON.stringify({
+          message: `Hello _ ,  _ has started the video consultation. Please click on the link and do join video consultation immediately ${url}.`,
+        }),
       });
 
       const res = await resPro.json();
