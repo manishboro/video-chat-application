@@ -314,7 +314,7 @@ export default function VideoPlayerOverview() {
 
       const res = await resPro.json();
 
-      if (res.data.details === "success") alert?.setStateSnackbarContext("Meeting link sent", "success");
+      if (res.data?.details === "success") alert?.setStateSnackbarContext("Meeting link sent", "success");
     } catch (err: any) {
       alert?.setStateSnackbarContext(err.message, "warning");
     }
