@@ -58,6 +58,8 @@ export default function VideoPlayerOverview() {
   let type = query.get("type");
   let mode = query.get("mode");
   let phoneNo = query.get("p");
+  let patient = query.get("patient");
+  let doctor = query.get("doctor");
 
   const matches_620px = useMediaQuery("(max-width: 620px)");
 
@@ -308,7 +310,7 @@ export default function VideoPlayerOverview() {
         headers: { "Content-Type": "application/json" },
         // body: JSON.stringify({ message: `Please join the meeting using the link ${url}` }),
         body: JSON.stringify({
-          message: `Hello _ , _ has started the video consultation. Please click on the link and do join video consultation immediately ${url}.`,
+          message: `Hello ${patient} ,  ${doctor} has started the video consultation. Please click on the link and do join video consultation immediately ${url}.`,
         }),
       });
 
